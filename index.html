@@ -1166,6 +1166,9 @@ async function submitAllTopics(){
   var dept = document.getElementById('dept').value;
   var name = document.getElementById('name').value;
   if(!dept || !name){ showToast('กรุณาเลือกฝ่ายและชื่อก่อน','error'); return; }
+  // ถ้ายังมีข้อความค้างในช่อง input ให้เพิ่มอัตโนมัติ
+  var pending = document.getElementById('topicInput').value.trim();
+  if(pending){ _topics.push({ text: pending, status: getPickedStatus('statusPicker') }); document.getElementById('topicInput').value=''; renderTopicList(); }
   if(!_topics.length){ showToast('กรุณาเพิ่มอย่างน้อย 1 หัวข้อ','error'); return; }
   var btn = document.getElementById('submitBtn');
   btn.disabled = true;
