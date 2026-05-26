@@ -10,48 +10,138 @@
 <!-- jsPDF for PDF export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script>
+// Apply theme before page renders to avoid flash
+(function(){
+  var t = localStorage.getItem('wr_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
 <style>
+/* ══ LIGHT MODE (default) ══ */
 :root{
-  --bg:#eef4fd;--surface:#ffffff;--surface2:#e8f0fb;--border:#d0dff0;
-  --accent:#1a6fd4;--accent2:#0ea86a;--accent3:#e05c3a;--accent4:#6b4fbb;
-  --text:#0d1f3c;--text2:#4a6080;--text3:#9ab0cc;
-  --shadow-sm:0 1px 3px rgba(13,31,60,.07),0 1px 2px rgba(13,31,60,.04);
-  --shadow-md:0 4px 12px rgba(13,31,60,.09),0 2px 4px rgba(13,31,60,.05);
-  --shadow-lg:0 8px 24px rgba(13,31,60,.12),0 4px 8px rgba(13,31,60,.06);
-  --radius:12px;--radius-sm:8px;
+  --bg:#f0f4f8;
+  --bg2:#e8edf5;
+  --surface:#ffffff;
+  --surface2:#f5f8fc;
+  --surface3:#edf2f8;
+  --border:#dde5f0;
+  --border2:#c8d6e8;
+  --accent:#2563eb;
+  --accent-hover:#1d4fd8;
+  --accent2:#059669;
+  --accent3:#dc4c27;
+  --accent4:#7c3aed;
+  --accent-glow:rgba(37,99,235,.18);
+  --text:#0f172a;
+  --text2:#475569;
+  --text3:#94a3b8;
+  --text-inv:#ffffff;
+  --shadow-sm:4px 4px 10px rgba(163,177,198,.5),-4px -4px 10px rgba(255,255,255,.9);
+  --shadow-md:6px 6px 16px rgba(163,177,198,.55),-6px -6px 16px rgba(255,255,255,.95);
+  --shadow-lg:10px 10px 28px rgba(163,177,198,.6),-10px -10px 28px rgba(255,255,255,1);
+  --shadow-inset:inset 3px 3px 8px rgba(163,177,198,.45),inset -3px -3px 8px rgba(255,255,255,.9);
+  --header-bg:rgba(255,255,255,.82);
+  --header-border:rgba(221,229,240,.9);
+  --radius:16px;--radius-sm:10px;--radius-xs:6px;
   --font:'Noto Sans Thai','Sarabun','Leelawadee UI',sans-serif;
   --mono:'IBM Plex Mono','Courier New',monospace;
-  --transition:all .2s cubic-bezier(.4,0,.2,1);
+  --transition:all .22s cubic-bezier(.4,0,.2,1);
+}
+
+/* ══ DARK MODE ══ */
+html[data-theme="dark"]{
+  --bg:#0f1623;
+  --bg2:#141c2e;
+  --surface:#1a2236;
+  --surface2:#1e2840;
+  --surface3:#243050;
+  --border:#2a3650;
+  --border2:#334266;
+  --accent:#3b82f6;
+  --accent-hover:#60a5fa;
+  --accent2:#10b981;
+  --accent3:#f97316;
+  --accent4:#a78bfa;
+  --accent-glow:rgba(59,130,246,.22);
+  --text:#e2e8f0;
+  --text2:#94a3b8;
+  --text3:#475569;
+  --text-inv:#0f172a;
+  --shadow-sm:4px 4px 10px rgba(0,0,0,.4),-2px -2px 8px rgba(255,255,255,.03);
+  --shadow-md:6px 6px 18px rgba(0,0,0,.5),-3px -3px 10px rgba(255,255,255,.03);
+  --shadow-lg:10px 10px 30px rgba(0,0,0,.6),-4px -4px 12px rgba(255,255,255,.04);
+  --shadow-inset:inset 3px 3px 8px rgba(0,0,0,.4),inset -3px -3px 8px rgba(255,255,255,.03);
+  --header-bg:rgba(26,34,54,.92);
+  --header-border:rgba(42,54,80,.95);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14.5px;line-height:1.65;min-height:100vh;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+html{transition:background .3s,color .3s}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:var(--font);font-size:14.5px;line-height:1.65;
+  min-height:100vh;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  transition:background .3s,color .3s;
+}
 
 /* ── Header ── */
 header{
-  background:linear-gradient(135deg,#1a6fd4 0%,#1558aa 100%);
-  border-bottom:1px solid rgba(0,0,0,.12);
-  padding:0 28px;height:64px;
+  background:var(--header-bg);
+  border-bottom:1px solid var(--header-border);
+  padding:0 32px;height:66px;
   display:flex;align-items:center;justify-content:space-between;
   position:sticky;top:0;z-index:100;
-  box-shadow:0 2px 12px rgba(26,111,212,.35);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 1px 0 var(--border),0 4px 20px rgba(0,0,0,.06);
+  transition:background .3s,border-color .3s;
 }
-.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:#fff;letter-spacing:-.1px}
-.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite;box-shadow:0 0 0 0 rgba(14,168,106,.4)}
-@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(63,185,80,.5)}60%{opacity:.85;box-shadow:0 0 0 7px rgba(63,185,80,0)}}
+.logo{
+  display:flex;align-items:center;gap:12px;
+  font-weight:800;font-size:16px;color:var(--text);letter-spacing:-.3px;
+}
+.logo-icon{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent4) 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;box-shadow:0 2px 10px var(--accent-glow);
+  flex-shrink:0;
+}
+.logo-dot{display:none}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(16,185,129,.4)}60%{opacity:.85;box-shadow:0 0 0 7px rgba(16,185,129,0)}}
 .status-badge{
-  display:flex;align-items:center;gap:7px;
-  background:rgba(255,255,255,.18);
-  border:1px solid rgba(255,255,255,.35);
-  border-radius:24px;padding:5px 15px;
-  font-size:12.5px;color:#fff;font-family:var(--mono);
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:20px;padding:5px 14px;
+  font-size:12px;color:var(--text2);font-family:var(--mono);
   transition:var(--transition);cursor:pointer;
-  backdrop-filter:blur(4px);
+  box-shadow:var(--shadow-sm);
 }
-.status-badge:hover{background:rgba(255,255,255,.26);border-color:rgba(255,255,255,.5)}
-.status-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+.status-badge:hover{border-color:var(--accent);color:var(--accent);background:var(--surface)}
+.status-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite}
+
+/* ── Theme Toggle ── */
+.theme-toggle{
+  width:44px;height:24px;border-radius:12px;
+  background:var(--surface3);border:1.5px solid var(--border2);
+  cursor:pointer;position:relative;transition:var(--transition);
+  box-shadow:var(--shadow-inset);flex-shrink:0;
+  display:flex;align-items:center;padding:0 3px;
+}
+.theme-toggle:hover{border-color:var(--accent)}
+.theme-toggle-knob{
+  width:16px;height:16px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent4) 100%);
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 2px 6px var(--accent-glow);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;
+}
+html[data-theme="dark"] .theme-toggle-knob{transform:translateX(20px)}
+.header-actions{display:flex;align-items:center;gap:10px}
 
 /* ── Layout ── */
-.container{max-width:1320px;margin:0 auto;padding:28px 20px;display:grid;grid-template-columns:308px 1fr;gap:22px}
+.container{max-width:1340px;margin:0 auto;padding:28px 22px;display:grid;grid-template-columns:300px 1fr;gap:22px}
 .sidebar{display:flex;flex-direction:column;gap:18px}
 
 /* ── Cards ── */
@@ -61,34 +151,35 @@ header{
   border-radius:var(--radius);
   overflow:hidden;
   box-shadow:var(--shadow-sm);
-  transition:box-shadow .2s;
+  transition:box-shadow .25s,border-color .25s,background .3s;
 }
-.card:hover{box-shadow:var(--shadow-md)}
+.card:hover{box-shadow:var(--shadow-md);border-color:var(--border2)}
 .card-header{
-  padding:14px 18px;
+  padding:14px 20px;
   border-bottom:1px solid var(--border);
-  font-weight:700;font-size:11px;
+  font-weight:700;font-size:10.5px;
   display:flex;align-items:center;justify-content:space-between;
-  color:var(--text2);text-transform:uppercase;letter-spacing:.9px;
-  background:linear-gradient(180deg,var(--surface) 0%,rgba(240,246,255,.6) 100%);
+  color:var(--text3);text-transform:uppercase;letter-spacing:1px;
+  background:var(--surface2);
 }
-.card-body{padding:18px}
+.card-body{padding:20px}
 
 /* ── Form Elements ── */
-label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+label{display:block;font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.9px}
 select,input,textarea{
-  width:100%;background:var(--surface);
+  width:100%;background:var(--surface2);
   border:1.5px solid var(--border);border-radius:var(--radius-sm);
-  color:var(--text);font-family:var(--font);font-size:14.5px;
-  padding:9px 13px;outline:none;
-  transition:border-color .18s,box-shadow .18s;
+  color:var(--text);font-family:var(--font);font-size:14px;
+  padding:10px 14px;outline:none;
+  transition:border-color .18s,box-shadow .18s,background .2s;
   margin-bottom:14px;
+  box-shadow:var(--shadow-inset);
 }
-select:hover,input:hover,textarea:hover{border-color:#b0c8e8}
+select:hover,input:hover,textarea:hover{border-color:var(--border2);background:var(--surface)}
 select:focus,input:focus,textarea:focus{
   border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(26,111,212,.12);
-  background:#fff;
+  box-shadow:0 0 0 3px var(--accent-glow);
+  background:var(--surface);
 }
 textarea{resize:vertical;min-height:84px;line-height:1.55}
 
@@ -96,36 +187,37 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
   padding:10px 20px;border-radius:var(--radius-sm);border:none;
-  font-family:var(--font);font-size:14.5px;font-weight:600;
+  font-family:var(--font);font-size:14px;font-weight:600;
   cursor:pointer;transition:var(--transition);letter-spacing:.1px;
 }
 .btn-primary{
-  background:linear-gradient(135deg,#1a6fd4 0%,#1558aa 100%);
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent4) 100%);
   color:#fff;width:100%;
-  box-shadow:0 2px 8px rgba(26,111,212,.35);
+  box-shadow:0 3px 12px var(--accent-glow);
 }
 .btn-primary:hover{
-  background:linear-gradient(135deg,#1d7ae8 0%,#1a6fd4 100%);
-  box-shadow:0 4px 14px rgba(26,111,212,.45);
+  filter:brightness(1.1);
+  box-shadow:0 5px 18px var(--accent-glow);
   transform:translateY(-1px);
 }
-.btn-primary:active{transform:translateY(0);box-shadow:0 1px 4px rgba(26,111,212,.3)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-.btn-sm{padding:5px 12px;font-size:12.5px;border-radius:6px}
-.btn-danger{background:rgba(224,92,58,.1);color:var(--accent3);border:1.5px solid rgba(224,92,58,.25)}
-.btn-danger:hover{background:rgba(224,92,58,.18);border-color:rgba(224,92,58,.4)}
-.btn-edit{background:rgba(26,111,212,.08);color:var(--accent);border:1.5px solid rgba(26,111,212,.22)}
-.btn-edit:hover{background:rgba(26,111,212,.15);border-color:rgba(26,111,212,.4)}
-.btn-success{background:rgba(14,168,106,.1);color:var(--accent2);border:1.5px solid rgba(14,168,106,.25)}
-.btn-success:hover{background:rgba(14,168,106,.18);border-color:rgba(14,168,106,.4)}
+.btn-primary:active{transform:translateY(0);filter:brightness(.96)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:var(--radius-xs)}
+.btn-danger{background:rgba(220,76,39,.1);color:var(--accent3);border:1.5px solid rgba(220,76,39,.2);box-shadow:var(--shadow-sm)}
+.btn-danger:hover{background:rgba(220,76,39,.16);border-color:rgba(220,76,39,.38);transform:translateY(-1px)}
+.btn-edit{background:rgba(37,99,235,.08);color:var(--accent);border:1.5px solid rgba(37,99,235,.2);box-shadow:var(--shadow-sm)}
+.btn-edit:hover{background:rgba(37,99,235,.14);border-color:rgba(37,99,235,.38);transform:translateY(-1px)}
+.btn-success{background:rgba(5,150,105,.1);color:var(--accent2);border:1.5px solid rgba(5,150,105,.22);box-shadow:var(--shadow-sm)}
+.btn-success:hover{background:rgba(5,150,105,.16);border-color:rgba(5,150,105,.4);transform:translateY(-1px)}
 .btn-ghost{
-  background:transparent;color:var(--text2);
+  background:var(--surface2);color:var(--text2);
   border:1.5px solid var(--border);padding:8px 16px;
   border-radius:var(--radius-sm);cursor:pointer;
-  font-family:var(--font);font-size:14.5px;
+  font-family:var(--font);font-size:14px;
   transition:var(--transition);
+  box-shadow:var(--shadow-sm);
 }
-.btn-ghost:hover{background:var(--surface2);border-color:#b0c8e8;color:var(--text)}
+.btn-ghost:hover{background:var(--surface);border-color:var(--border2);color:var(--text);transform:translateY(-1px)}
 
 /* ── Department Tags ── */
 .dept-tag{
@@ -133,9 +225,9 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
   font-family:var(--mono);padding:3px 9px;
   border-radius:5px;letter-spacing:.8px;
 }
-.dept-tag.hr{background:rgba(26,111,212,.1);color:#1a6fd4;border:1px solid rgba(26,111,212,.25)}
-.dept-tag.it{background:rgba(14,168,106,.1);color:#0a8a58;border:1px solid rgba(14,168,106,.25)}
-.dept-tag.ia{background:rgba(107,79,187,.1);color:#6b4fbb;border:1px solid rgba(107,79,187,.25)}
+.dept-tag.hr{background:rgba(37,99,235,.1);color:var(--accent);border:1px solid rgba(37,99,235,.22)}
+.dept-tag.it{background:rgba(5,150,105,.1);color:var(--accent2);border:1px solid rgba(5,150,105,.22)}
+.dept-tag.ia{background:rgba(124,58,237,.1);color:var(--accent4);border:1px solid rgba(124,58,237,.22)}
 
 /* ── Member List ── */
 .member-item{
@@ -146,9 +238,9 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
 .member-item:last-child{border-bottom:none}
 .member-item:hover{opacity:.85}
 .avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
-.avatar.hr{background:rgba(26,111,212,.12);color:#1a6fd4}
-.avatar.it{background:rgba(14,168,106,.12);color:#0a8a58}
-.avatar.ia{background:rgba(107,79,187,.12);color:#6b4fbb}
+.avatar.hr{background:rgba(37,99,235,.14);color:var(--accent)}
+.avatar.it{background:rgba(5,150,105,.14);color:var(--accent2)}
+.avatar.ia{background:rgba(124,58,237,.14);color:var(--accent4)}
 .member-name{font-size:13.5px;font-weight:600;flex:1;letter-spacing:-.1px}
 .member-count{font-size:11.5px;font-family:var(--mono);color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:2px 9px}
 .member-actions{display:flex;gap:5px;opacity:0;transition:opacity .15s}
@@ -159,27 +251,27 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .stat-card{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:20px 18px;
-  box-shadow:var(--shadow-sm);
+  border-radius:var(--radius);padding:22px 20px;
+  box-shadow:var(--shadow-md);
   position:relative;overflow:hidden;
   transition:var(--transition);
 }
-.stat-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--accent) 0%,rgba(26,111,212,.3) 100%);
-  opacity:0;transition:opacity .2s;
+.stat-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent4));
+  opacity:0;transition:opacity .22s;border-radius:0 0 var(--radius) var(--radius);
 }
-.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.stat-card:hover::before{opacity:1}
-.stat-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);font-weight:700;margin-bottom:9px}
-.stat-value{font-size:34px;font-weight:800;font-family:var(--mono);line-height:1;letter-spacing:-1px}
-.stat-value.blue{color:#1a6fd4}.stat-value.green{color:#0ea86a}.stat-value.purple{color:#6b4fbb}
+.stat-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-3px);border-color:var(--border2)}
+.stat-card:hover::after{opacity:1}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;margin-bottom:10px}
+.stat-value{font-size:36px;font-weight:800;font-family:var(--mono);line-height:1;letter-spacing:-1.5px}
+.stat-value.blue{color:var(--accent)}.stat-value.green{color:var(--accent2)}.stat-value.purple{color:var(--accent4)}
 
 /* ── Toolbar ── */
 .toolbar{
   display:flex;gap:8px;flex-wrap:wrap;align-items:center;
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:12px 14px;
+  border-radius:var(--radius);padding:12px 16px;
   box-shadow:var(--shadow-sm);
 }
 .filter-select{
@@ -189,7 +281,7 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
   padding:7px 11px;outline:none;cursor:pointer;margin:0;width:auto;
   transition:border-color .18s;
 }
-.filter-select:hover{border-color:#b0c8e8}
+.filter-select:hover{border-color:var(--border2)}
 .filter-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,111,212,.1)}
 .filter-input{
   background:var(--bg);border:1.5px solid var(--border);
@@ -198,8 +290,8 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
   padding:7px 11px;outline:none;flex:1;min-width:160px;margin:0;
   transition:border-color .18s;
 }
-.filter-input:hover{border-color:#b0c8e8}
-.filter-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,111,212,.1);background:#fff}
+.filter-input:hover{border-color:var(--border2)}
+.filter-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,111,212,.1);background:var(--surface)}
 .export-group{display:flex;gap:7px;margin-left:auto}
 .btn-export{
   display:inline-flex;align-items:center;gap:6px;
@@ -207,9 +299,9 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
   font-family:var(--font);font-size:13px;font-weight:600;
   cursor:pointer;transition:var(--transition);letter-spacing:.1px;
 }
-.btn-export.pdf{background:rgba(224,92,58,.1);color:#c0401a;border:1.5px solid rgba(224,92,58,.28)}
+.btn-export.pdf{background:rgba(224,92,58,.1);color:var(--accent3);border:1.5px solid rgba(224,92,58,.28)}
 .btn-export.pdf:hover{background:rgba(224,92,58,.18);transform:translateY(-1px);box-shadow:0 3px 8px rgba(224,92,58,.2)}
-.btn-export.ai{background:linear-gradient(135deg,rgba(107,79,187,.12) 0%,rgba(26,111,212,.1) 100%);color:#5a3fa8;border:1.5px solid rgba(107,79,187,.35);font-weight:700}
+.btn-export.ai{background:linear-gradient(135deg,rgba(107,79,187,.12) 0%,rgba(26,111,212,.1) 100%);color:var(--accent4);border:1.5px solid rgba(107,79,187,.35);font-weight:700}
 .btn-export.ai:hover{background:linear-gradient(135deg,rgba(107,79,187,.22) 0%,rgba(26,111,212,.18) 100%);transform:translateY(-1px);box-shadow:0 3px 10px rgba(107,79,187,.25)}
 
 /* ── AI Modal ── */
@@ -226,13 +318,13 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
 .ai-upload-sub{font-size:12px;color:var(--text3)}
 .ai-file-info{display:none;align-items:center;gap:10px;background:rgba(107,79,187,.07);border:1px solid rgba(107,79,187,.2);border-radius:8px;padding:10px 14px;margin-bottom:14px}
 .ai-file-info.show{display:flex}
-.ai-file-name{font-size:13px;font-weight:700;color:#5a3fa8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ai-file-name{font-size:13px;font-weight:700;color:var(--accent4);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ai-file-size{font-size:11.5px;font-family:var(--mono);color:var(--text2);flex-shrink:0}
 .ai-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
 .ai-tab{flex:1;padding:8px 6px;border-radius:7px;border:1.5px solid var(--border);background:var(--bg);color:var(--text2);font-family:var(--font);font-size:12.5px;font-weight:600;cursor:pointer;transition:var(--transition);text-align:center;white-space:nowrap}
-.ai-tab:hover{border-color:#6b4fbb;color:#5a3fa8}
-.ai-tab.active{background:rgba(107,79,187,.1);border-color:#6b4fbb;color:#5a3fa8;box-shadow:0 2px 6px rgba(107,79,187,.15)}
-.ai-thinking{display:none;align-items:center;gap:10px;padding:14px 0;color:#5a3fa8;font-size:13.5px;font-weight:600}
+.ai-tab:hover{border-color:var(--accent4);color:var(--accent4)}
+.ai-tab.active{background:rgba(107,79,187,.12);border-color:var(--accent4);color:var(--accent4);box-shadow:0 2px 6px rgba(107,79,187,.15)}
+.ai-thinking{display:none;align-items:center;gap:10px;padding:14px 0;color:var(--accent4);font-size:13.5px;font-weight:600}
 .ai-thinking.show{display:flex}
 .ai-spinner{width:18px;height:18px;border:2.5px solid rgba(107,79,187,.2);border-top-color:#6b4fbb;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 .ai-result{
@@ -241,9 +333,9 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
   max-height:380px;overflow-y:auto;
 }
 .ai-result.show{display:block}
-.ai-result-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5a3fa8;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ai-result-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent4);margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .ai-result-body{white-space:pre-wrap;font-size:13.5px;line-height:1.8;color:var(--text)}
-.ai-result-body strong{font-weight:700;color:#0d1f3c}
+.ai-result-body strong{font-weight:700;color:var(--text)}
 .ai-footer-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap}
 .btn-ai-pdf{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);border:none;font-family:var(--font);font-size:13.5px;font-weight:700;cursor:pointer;transition:var(--transition);background:linear-gradient(135deg,#e05c3a,#c0401a);color:#fff;box-shadow:0 2px 8px rgba(224,92,58,.35)}
 .btn-ai-pdf:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(224,92,58,.45)}
@@ -258,33 +350,34 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
 .table-header{
   padding:14px 18px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(180deg,var(--surface) 0%,rgba(238,244,253,.7) 100%);
+  background:var(--surface2);
 }
 .table-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.9px}
 .realtime-badge{display:flex;align-items:center;gap:6px;font-size:12px;font-family:var(--mono);color:var(--accent2)}
 .rt-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 1.5s infinite}
 table{width:100%;border-collapse:collapse}
 th{
-  padding:13px 16px;text-align:left;font-size:11px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.9px;
-  color:rgba(255,255,255,.97);
-  background:linear-gradient(180deg,#2279e0 0%,#1a6fd4 100%);
-  border-bottom:1px solid #1558aa;white-space:nowrap;
+  padding:12px 16px;text-align:left;font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+  color:var(--text3);
+  background:var(--surface2);
+  border-bottom:1px solid var(--border);white-space:nowrap;
   cursor:pointer;user-select:none;
-  transition:background .15s;
+  transition:background .15s,color .15s;
 }
-th:hover{background:linear-gradient(180deg,#2886f0 0%,#2279e0 100%)}
+th:hover{background:var(--surface3);color:var(--accent)}
 th .sort-icon{margin-left:5px;opacity:.45;font-size:10px}
-th.sorted .sort-icon{opacity:1}
+th.sorted .sort-icon{opacity:1;color:var(--accent)}
 td{
-  padding:15px 16px;border-bottom:1px solid rgba(194,212,238,.55);
-  vertical-align:middle;font-size:14px;line-height:1.6;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  vertical-align:middle;font-size:13.5px;line-height:1.6;
+  transition:background .15s;
 }
 tr:last-child td{border-bottom:none}
 tr.new-row{animation:flashRow 2.5s ease-out}
-@keyframes flashRow{0%{background:rgba(26,111,212,.12)}100%{background:transparent}}
-tr:hover td{background:rgba(26,111,212,.025)}
-.topic-text{font-weight:700;font-size:14px;color:#0a1a35;line-height:1.4;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
+@keyframes flashRow{0%{background:var(--accent-glow)}100%{background:transparent}}
+tr:hover td{background:var(--surface2)}
+.topic-text{font-weight:700;font-size:14px;color:var(--text);line-height:1.4;letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:360px}
 .result-text{color:var(--text2);font-size:13px;margin-top:4px;line-height:1.5;font-weight:400}
 .time-text{font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap;font-weight:500;letter-spacing:.3px}
 .action-btns{display:flex;gap:5px;white-space:nowrap}
@@ -297,21 +390,26 @@ tr:hover td{background:rgba(26,111,212,.025)}
 #toast{
   position:fixed;bottom:28px;right:28px;
   background:var(--surface);border:1px solid var(--border);
-  border-radius:10px;padding:13px 20px;font-size:14px;
+  border-radius:12px;padding:13px 20px;font-size:13.5px;
   box-shadow:var(--shadow-lg);
   transform:translateY(90px) scale(.95);opacity:0;
   transition:all .35s cubic-bezier(.34,1.5,.64,1);
-  z-index:9999;max-width:320px;font-weight:500;
+  z-index:9999;max-width:320px;font-weight:600;
+  display:flex;align-items:center;gap:9px;
 }
 #toast.show{transform:translateY(0) scale(1);opacity:1}
-#toast.success{border-color:rgba(14,168,106,.4);color:var(--accent2);background:linear-gradient(135deg,#fff 0%,rgba(14,168,106,.04) 100%)}
-#toast.error{border-color:rgba(224,92,58,.4);color:var(--accent3);background:linear-gradient(135deg,#fff 0%,rgba(224,92,58,.04) 100%)}
+#toast.success{border-color:rgba(5,150,105,.35);color:var(--accent2)}
+#toast.error{border-color:rgba(220,76,39,.35);color:var(--accent3)}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:#b0c8e8;border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:#8bafd4}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+/* ── Member item ── */
+.member-item{transition:var(--transition)}
+.member-item:hover{opacity:1!important;background:var(--surface2);border-radius:var(--radius-sm);padding-left:4px}
 
 @media(max-width:900px){
   .container{grid-template-columns:1fr}
@@ -322,19 +420,21 @@ tr:hover td{background:rgba(26,111,212,.025)}
 /* ── Modals ── */
 .modal-overlay{
   position:fixed;inset:0;
-  background:rgba(8,20,48,.65);
-  backdrop-filter:blur(3px);
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;
 }
 .modal-overlay.hidden{display:none}
 .modal{
   background:var(--surface);border:1px solid var(--border);
-  border-radius:16px;padding:28px;
+  border-radius:20px;padding:30px;
   width:500px;max-width:100%;max-height:90vh;overflow-y:auto;
-  box-shadow:var(--shadow-lg),0 0 0 1px rgba(255,255,255,.06);
+  box-shadow:var(--shadow-lg);
+  animation:modalIn .22s cubic-bezier(.34,1.28,.64,1);
 }
-.modal h2{font-size:18px;font-weight:700;margin-bottom:7px;color:var(--text)}
-.modal p{font-size:14px;color:var(--text2);margin-bottom:22px;line-height:1.55}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.modal h2{font-size:18px;font-weight:800;margin-bottom:6px;color:var(--text);letter-spacing:-.3px}
+.modal p{font-size:13.5px;color:var(--text2);margin-bottom:22px;line-height:1.6}
 .modal input,.modal select,.modal textarea{margin-bottom:10px}
 .modal-footer{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;padding-top:16px;border-top:1px solid var(--border)}
 .code-hint{
@@ -369,10 +469,10 @@ tr:hover td{background:rgba(26,111,212,.025)}
   border-radius:6px;padding:5px 11px;cursor:pointer;
   font-family:var(--mono);font-size:12.5px;transition:var(--transition);
 }
-.page-btn:hover{border-color:var(--accent);color:var(--accent);background:#fff}
+.page-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--surface)}
 .page-btn.active{
   background:var(--accent);color:#fff;border-color:var(--accent);
-  box-shadow:0 2px 6px rgba(26,111,212,.35);
+  box-shadow:0 2px 8px var(--accent-glow);
 }
 .page-btn:disabled{opacity:.38;cursor:not-allowed}
 .latest-badge{
@@ -438,23 +538,47 @@ tr:hover td{background:rgba(26,111,212,.025)}
 .status-picker{display:flex;gap:7px;margin-bottom:4px;flex-wrap:wrap}
 .status-btn{
   flex:1;padding:9px 6px;border-radius:var(--radius-sm);
-  border:1.5px solid var(--border);background:var(--bg);
-  color:var(--text2);font-family:var(--font);font-size:13.5px;
+  border:1.5px solid var(--border);background:var(--surface2);
+  color:var(--text2);font-family:var(--font);font-size:13px;
   font-weight:600;cursor:pointer;transition:var(--transition);white-space:nowrap;
+  box-shadow:var(--shadow-sm);
 }
-.status-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(26,111,212,.04)}
-.status-btn.active[data-val="สำเร็จ"]{background:rgba(14,168,106,.1);border-color:#0ea86a;color:#0a7a4e;box-shadow:0 2px 6px rgba(14,168,106,.15)}
-.status-btn.active[data-val="รอดำเนินการ"]{background:rgba(26,111,212,.1);border-color:#1a6fd4;color:#1a6fd4;box-shadow:0 2px 6px rgba(26,111,212,.15)}
-.status-btn.active[data-val="ไม่สำเร็จ"]{background:rgba(224,92,58,.1);border-color:#e05c3a;color:#c0401a;box-shadow:0 2px 6px rgba(224,92,58,.15)}
+.status-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--surface)}
+.status-btn.active[data-val="สำเร็จ"]{background:rgba(14,168,106,.15);border-color:#0ea86a;color:var(--accent2);box-shadow:0 2px 6px rgba(14,168,106,.15)}
+.status-btn.active[data-val="รอดำเนินการ"]{background:rgba(26,111,212,.15);border-color:var(--accent);color:var(--accent);box-shadow:0 2px 6px rgba(26,111,212,.15)}
+.status-btn.active[data-val="ไม่สำเร็จ"]{background:rgba(224,92,58,.15);border-color:var(--accent3);color:var(--accent3);box-shadow:0 2px 6px rgba(224,92,58,.15)}
 .status-tag{
   display:inline-flex;align-items:center;gap:4px;
   font-size:11px;font-weight:700;
   padding:4px 11px;border-radius:12px;
   white-space:nowrap;vertical-align:middle;letter-spacing:.3px;
 }
-.status-tag.s1{background:rgba(14,168,106,.1);color:#0a7a4e;border:1px solid rgba(14,168,106,.3)}
-.status-tag.s2{background:rgba(26,111,212,.1);color:#1a6fd4;border:1px solid rgba(26,111,212,.3)}
-.status-tag.s3{background:rgba(224,92,58,.1);color:#c0401a;border:1px solid rgba(224,92,58,.3)}
+.status-tag.s1{background:rgba(14,168,106,.12);color:var(--accent2);border:1px solid rgba(14,168,106,.3)}
+.status-tag.s2{background:rgba(26,111,212,.12);color:var(--accent);border:1px solid rgba(26,111,212,.3)}
+.status-tag.s3{background:rgba(224,92,58,.12);color:var(--accent3);border:1px solid rgba(224,92,58,.3)}
+
+/* ── Topic List (Report Modal) ── */
+.topic-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface2);border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);padding:11px 14px;
+  font-size:14px;font-weight:500;color:var(--text);
+  transition:var(--transition);
+}
+.topic-item:hover{border-color:var(--border2);background:var(--surface3)}
+.topic-num{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--accent);color:#fff;
+  font-size:12px;font-weight:700;font-family:var(--mono);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.topic-text-label{flex:1;line-height:1.45}
+.topic-remove{
+  background:none;border:none;cursor:pointer;
+  color:var(--text3);font-size:16px;padding:2px 4px;
+  border-radius:4px;transition:var(--transition);line-height:1;flex-shrink:0;
+}
+.topic-remove:hover{color:var(--accent3);background:rgba(224,92,58,.08)}
 </style>
 </head>
 <body>
@@ -480,6 +604,61 @@ tr:hover td{background:rgba(26,111,212,.025)}
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeConfig()">ยกเลิก</button>
       <button class="btn btn-primary" style="width:auto" onclick="saveConfig()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Report Modal (Multi-topic) ── -->
+<div class="modal-overlay hidden" id="reportModal">
+  <div class="modal" style="width:580px;max-width:100%">
+    <h2>✏️ บันทึกผลงานประจำวัน</h2>
+    <p style="margin-bottom:16px">กรอกข้อมูลและเพิ่มรายการงานได้หลายหัวข้อ</p>
+
+    <!-- Step 1: dept + name -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div>
+        <label>ฝ่าย</label>
+        <select id="dept" onchange="updateNames()" style="margin-bottom:0">
+          <option value="">— เลือกฝ่าย —</option>
+          <option value="HR">HR</option>
+          <option value="IT">IT</option>
+          <option value="IA">IA</option>
+        </select>
+      </div>
+      <div>
+        <label>ชื่อ-นามสกุล</label>
+        <select id="name" style="margin-bottom:0"><option value="">— เลือกฝ่ายก่อน —</option></select>
+      </div>
+    </div>
+
+    <!-- Step 2: status default -->
+    <label>สถานะเริ่มต้น (ใช้กับทุกรายการ)</label>
+    <div class="status-picker" id="statusPicker" style="margin-bottom:18px">
+      <button type="button" class="status-btn active" data-val="สำเร็จ" onclick="pickStatus(this)">✅ สำเร็จ</button>
+      <button type="button" class="status-btn" data-val="รอดำเนินการ" onclick="pickStatus(this)">⏳ รอดำเนินการ</button>
+      <button type="button" class="status-btn" data-val="ไม่สำเร็จ" onclick="pickStatus(this)">❌ ไม่สำเร็จ</button>
+    </div>
+
+    <!-- Step 3: topic list -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <label style="margin:0">รายการงานประจำวัน</label>
+      <span id="topicCount" style="font-size:12px;font-family:var(--mono);color:var(--text3)">0 รายการ</span>
+    </div>
+    <div id="topicList" style="display:flex;flex-direction:column;gap:8px;min-height:40px;margin-bottom:12px"></div>
+    <!-- Add topic row -->
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="text" id="topicInput" placeholder="หัวข้อการดำเนินงาน เช่น Morning Talk, สรรหาพนักงาน"
+        style="margin:0;flex:1;font-size:14px"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();addTopic()}" />
+      <button class="btn btn-success btn-sm" onclick="addTopic()" style="white-space:nowrap;padding:9px 14px">+ เพิ่ม</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--text3);margin-top:6px;margin-bottom:4px">กด Enter หรือปุ่ม + เพิ่มรายการ</div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeReportModal()">ยกเลิก</button>
+      <button class="btn btn-primary" style="width:auto;min-width:160px" onclick="submitAllTopics()" id="submitBtn">
+        💾 บันทึกทั้งหมด
+      </button>
     </div>
   </div>
 </div>
@@ -526,7 +705,7 @@ tr:hover td{background:rgba(26,111,212,.025)}
         <option value="IT">IT</option>
         <option value="IA">IA</option>
       </select>
-      <button class="btn btn-success btn-sm" onclick="addMember()">➕ เพิ่ม</button>
+      <button id="addMemberBtn" class="btn btn-success btn-sm" onclick="addMember()">➕ เพิ่ม</button>
     </div>
     <div class="section-title">รายชื่อปัจจุบัน</div>
     <div id="memberEditList" style="max-height:320px;overflow-y:auto"></div>
@@ -538,43 +717,36 @@ tr:hover td{background:rgba(26,111,212,.025)}
 
 <header>
   <div class="logo">
-    <div class="logo-dot"></div>
-    Work Report
-    <span style="color:var(--text2);font-weight:400;font-size:13px">/ Nhost Edition</span>
+    <div class="logo-icon">📊</div>
+    <div>
+      <div style="font-size:15px;font-weight:800;letter-spacing:-.3px">Work Report</div>
+      <div style="font-size:11px;font-weight:400;color:var(--text3);letter-spacing:.2px;margin-top:-1px">Nhost Edition</div>
+    </div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <button class="btn-ghost btn-sm" onclick="openConfig()" style="font-size:11px;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);color:#fff;cursor:pointer;font-family:var(--font)">⚙️ Config</button>
+  <div class="header-actions">
     <div id="statusBadge" class="status-badge" onclick="loadReports()">
       <div class="dot"></div>
       <span id="statusText">กำลังโหลด…</span>
     </div>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle" title="เปลี่ยนธีม">
+      <div class="theme-toggle-knob" id="themeKnob">☀️</div>
+    </button>
+    <button class="btn-ghost btn-sm" onclick="openConfig()" style="font-size:11px;padding:5px 11px;white-space:nowrap">⚙️ Config</button>
   </div>
 </header>
 
 <div class="container">
   <div class="sidebar">
-    <!-- Form -->
+    <!-- Quick Record Button -->
     <div class="card">
-      <div class="card-header"><span>📝 บันทึกผลงาน</span></div>
-      <div class="card-body">
-        <label>ฝ่าย</label>
-        <select id="dept" onchange="updateNames()">
-          <option value="">— เลือกฝ่าย —</option>
-          <option value="HR">HR</option>
-          <option value="IT">IT</option>
-          <option value="IA">IA</option>
-        </select>
-        <label>ชื่อ-นามสกุล</label>
-        <select id="name"><option value="">— เลือกฝ่ายก่อน —</option></select>
-        <label>ผลงาน / รายละเอียด</label>
-        <textarea id="result" placeholder="อธิบายผลงานที่ทำ…"></textarea>
-        <label>สถานะ</label>
-        <div class="status-picker" id="statusPicker">
-          <button type="button" class="status-btn active" data-val="สำเร็จ" onclick="pickStatus(this)">✅ สำเร็จ</button>
-          <button type="button" class="status-btn" data-val="รอดำเนินการ" onclick="pickStatus(this)">⏳ รอดำเนินการ</button>
-          <button type="button" class="status-btn" data-val="ไม่สำเร็จ" onclick="pickStatus(this)">❌ ไม่สำเร็จ</button>
+      <div class="card-body" style="padding:20px 18px">
+        <button class="btn btn-primary" onclick="openReportModal()" style="font-size:15px;padding:14px 20px;letter-spacing:.2px">
+          ✏️ บันทึกผลงานประจำวัน
+        </button>
+        <div style="margin-top:12px;font-size:12.5px;color:var(--text3);text-align:center;line-height:1.65">
+          เพิ่มได้หลายหัวข้อต่อครั้ง<br>กดปุ่มเพื่อเปิดหน้าต่างบันทึก
         </div>
-        <button class="btn btn-primary" onclick="submitReport()" id="submitBtn" style="margin-top:12px">➕ บันทึกผลงาน</button>
       </div>
     </div>
     <!-- Members -->
@@ -721,13 +893,13 @@ tr:hover td{background:rgba(26,111,212,.025)}
       <div style="display:flex;align-items:center;gap:12px">
         <div style="width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#0ea86a,#0a7a4e);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">&#x1F4CA;</div>
         <div style="text-align:left">
-          <div style="font-size:14px;font-weight:700;color:#0a7a4e">ดาวน์โหลด Excel วันนี้</div>
+          <div style="font-size:14px;font-weight:700;color:var(--accent2)">ดาวน์โหลด Excel วันนี้</div>
           <div id="aiExcelTodayCount" style="font-size:11.5px;color:var(--text2);margin-top:1px">กำลังนับรายการ&#x2026;</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;background:rgba(14,168,106,.12);border:1px solid rgba(14,168,106,.3)">
         <span style="font-size:13px">&#x2B07;&#xFE0F;</span>
-        <span style="font-size:12.5px;font-weight:700;color:#0a7a4e">.xlsx</span>
+        <span style="font-size:12.5px;font-weight:700;color:var(--accent2)">.xlsx</span>
       </div>
     </button>
 
@@ -737,12 +909,12 @@ tr:hover td{background:rgba(26,111,212,.025)}
       <textarea id="aiPromptPreview" rows="4"
         style="width:100%;font-size:13px;line-height:1.7;background:rgba(107,79,187,.04);border:1.5px solid rgba(107,79,187,.2);border-radius:var(--radius-sm);padding:12px 52px 12px 12px;color:var(--text);font-family:var(--font);resize:vertical;margin-bottom:4px;outline:none;font-weight:500">ทำ Report วิเคราะห์และแปลงเป็นไฟล์ PDF พร้อมตกแต่งให้ดูดี</textarea>
       <button onclick="copyAiPrompt()" id="copyPromptBtn"
-        style="position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:5px;border:1px solid rgba(107,79,187,.3);background:rgba(107,79,187,.08);color:#5a3fa8;font-family:var(--font);font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s"
+        style="position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:5px;border:1px solid rgba(107,79,187,.3);background:rgba(107,79,187,.08);color:var(--accent4);font-family:var(--font);font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s"
         onmouseover="this.style.background='rgba(107,79,187,.18)'" onmouseout="this.style.background='rgba(107,79,187,.08)'">
         &#x1F4CB; Copy
       </button>
     </div>
-    <div id="aiGeminiNote" style="display:none;font-size:11.5px;color:#b07d00;background:rgba(255,200,0,.08);border:1px solid rgba(255,200,0,.25);border-radius:6px;padding:7px 12px;margin-bottom:12px">
+    <div id="aiGeminiNote" style="display:none;font-size:11.5px;color:var(--text2);background:rgba(255,200,0,.08);border:1px solid rgba(255,200,0,.25);border-radius:6px;padding:7px 12px;margin-bottom:12px">
       &#x26A0;&#xFE0F; <strong>Gemini</strong> ไม่รองรับการส่ง URL parameter &#x2014; ระบบจะ <strong>copy ข้อความไว้ในคลิปบอร์ด</strong> ให้อัตโนมัติ แล้วค่อยวาง (Ctrl+V) ในช่อง Gemini
     </div>
     <div style="height:1px;background:var(--border);margin:12px 0 14px"></div>
@@ -822,19 +994,41 @@ function saveConfig(){
 }
 
 // ════════════════════════════════════════════
-//  MEMBERS — เก็บใน localStorage
+//  MEMBERS — เก็บใน Nhost (work_members table)
+//  ทุกเครื่องเห็นชื่อเหมือนกัน real-time
 // ════════════════════════════════════════════
-var DEFAULT_MEMBERS={
-  HR:['สมชาย ใจดี','สุดา รักงาน','นภา สวยงาม','ธนพล มีสุข','กัลยา ทำงาน'],
-  IT:['วิชัย โค้ดเก่ง','ปิยะ เน็ตเร็ว','มนตรี ดีบัค','สรวิชญ์ อัพเดต','ชนิกา ซิสแอด'],
-  IA:['อรพิน วิเคราะห์','ปณิธาน ข้อมูล','ศิริพร รายงาน','ณัฐวุฒิ ออดิต','สิริมา ตรวจสอบ']
-};
-function getMembers(){
-  var raw=localStorage.getItem('work_report_members');
-  if(!raw)return JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
-  try{return JSON.parse(raw);}catch(e){return JSON.parse(JSON.stringify(DEFAULT_MEMBERS));}
+var _membersCache={HR:[],IT:[],IA:[]};
+
+function getMembers(){return _membersCache;}
+
+async function loadMembers(){
+  var QUERY=`query GetMembers{work_members(order_by:{dept:asc,name:asc}){id dept name}}`;
+  try{
+    var data=await gql(QUERY);
+    if(!data)return;
+    var m={HR:[],IT:[],IA:[]};
+    (data.work_members||[]).forEach(function(r){
+      if(m[r.dept])m[r.dept].push({id:r.id,name:r.name});
+    });
+    _membersCache=m;
+    updateNames();
+    renderMemberList();
+  }catch(e){
+    // ถ้ายังไม่มีตาราง work_members แสดงคำแนะนำ
+    console.warn('work_members table not found:',e.message);
+    showMembersTableHint();
+  }
 }
-function saveMembers(m){localStorage.setItem('work_report_members',JSON.stringify(m));}
+
+function showMembersTableHint(){
+  var el=document.getElementById('memberList');
+  if(el)el.innerHTML='<div style="color:var(--accent3);font-size:12px;padding:8px 0;line-height:1.6">⚠️ ยังไม่มีตาราง <code>work_members</code><br>กรุณาสร้างใน Hasura ก่อน<br><a href="#" onclick="showCreateTableSQL()" style="color:var(--accent)">ดู SQL คำสั่ง ›</a></div>';
+}
+
+function showCreateTableSQL(){
+  var sql='CREATE TABLE work_members (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  dept text NOT NULL,\n  name text NOT NULL,\n  created_at timestamptz DEFAULT now()\n);\n\n-- Track ใน Hasura แล้ว grant SELECT,INSERT,DELETE';
+  alert('สร้างตาราง work_members ใน Hasura:\n\n'+sql);
+}
 
 // ════════════════════════════════════════════
 //  GRAPHQL HELPER
@@ -885,7 +1079,6 @@ async function loadReports(){
     }
     renderTable(allReports,allReports.length>prev&&prev>0);
     updateStats();
-    renderMemberList();
     setStatus(true);
   }catch(e){
     setStatus(false,e.message);
@@ -911,28 +1104,90 @@ function setPickedStatus(pickerId,val){
     b.classList.toggle('active',b.getAttribute('data-val')===val);
   });
 }
+// ════════════════════════════════════════════
+//  REPORT MODAL — Multi-topic
+// ════════════════════════════════════════════
+var _topics = []; // [{text, status}]
+
+function openReportModal(){
+  _topics = [];
+  document.getElementById('dept').value = '';
+  document.getElementById('name').innerHTML = '<option value="">— เลือกฝ่ายก่อน —</option>';
+  setPickedStatus('statusPicker','สำเร็จ');
+  document.getElementById('topicInput').value = '';
+  renderTopicList();
+  document.getElementById('reportModal').classList.remove('hidden');
+  setTimeout(function(){ document.getElementById('dept').focus(); }, 100);
+}
+
+function closeReportModal(){
+  document.getElementById('reportModal').classList.add('hidden');
+  _topics = [];
+}
+
+function addTopic(){
+  var val = document.getElementById('topicInput').value.trim();
+  if(!val){ showToast('กรุณากรอกหัวข้องาน','error'); return; }
+  var status = getPickedStatus('statusPicker');
+  _topics.push({ text: val, status: status });
+  document.getElementById('topicInput').value = '';
+  renderTopicList();
+  document.getElementById('topicInput').focus();
+}
+
+function removeTopic(idx){
+  _topics.splice(idx, 1);
+  renderTopicList();
+}
+
+function renderTopicList(){
+  var list = document.getElementById('topicList');
+  var count = document.getElementById('topicCount');
+  count.textContent = _topics.length + ' รายการ';
+  if(!_topics.length){
+    list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0;text-align:center">ยังไม่มีรายการ — เพิ่มหัวข้อด้านล่าง</div>';
+    return;
+  }
+  list.innerHTML = _topics.map(function(t, i){
+    return '<div class="topic-item">'
+      + '<div class="topic-num">' + (i+1) + '</div>'
+      + '<div class="topic-text-label">' + esc(t.text) + '</div>'
+      + '<button class="topic-remove" onclick="removeTopic(' + i + ')" title="ลบ">×</button>'
+      + '</div>';
+  }).join('');
+}
+
 async function submitReport(){
-  var dept=document.getElementById('dept').value;
-  var name=document.getElementById('name').value;
-  var result=document.getElementById('result').value.trim();
-  if(!dept||!name){showToast('กรุณากรอกข้อมูลให้ครบครับ','error');return;}
-  var btn=document.getElementById('submitBtn');
-  btn.disabled=true;btn.textContent='⏳ กำลังบันทึก…';
-  var MUTATION=`
+  // legacy compat — redirect to modal
+  openReportModal();
+}
+
+async function submitAllTopics(){
+  var dept = document.getElementById('dept').value;
+  var name = document.getElementById('name').value;
+  if(!dept || !name){ showToast('กรุณาเลือกฝ่ายและชื่อก่อน','error'); return; }
+  if(!_topics.length){ showToast('กรุณาเพิ่มอย่างน้อย 1 หัวข้อ','error'); return; }
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ กำลังบันทึก ' + _topics.length + ' รายการ…';
+  var MUTATION = `
     mutation InsertReport($dept:String!,$reporter:String!,$result:String,$status:String){
       insert_work_reports_one(object:{dept:$dept,reporter:$reporter,result:$result,status:$status}){id created_at}
     }
   `;
   try{
-    var status=getPickedStatus('statusPicker');
-    await gql(MUTATION,{dept:dept,reporter:name,result:result,status:status});
-    document.getElementById('result').value='';
-    showToast('✅ บันทึกผลงานสำเร็จ!','success');
+    for(var i = 0; i < _topics.length; i++){
+      var t = _topics[i];
+      await gql(MUTATION, { dept: dept, reporter: name, result: t.text, status: t.status });
+    }
+    showToast('✅ บันทึก ' + _topics.length + ' รายการสำเร็จ!', 'success');
+    closeReportModal();
     await loadReports();
   }catch(e){
-    showToast('บันทึกไม่ได้: '+e.message,'error');
+    showToast('บันทึกไม่ได้: ' + e.message, 'error');
   }finally{
-    btn.disabled=false;btn.textContent='➕ บันทึกผลงาน';
+    btn.disabled = false;
+    btn.innerHTML = '💾 บันทึกทั้งหมด';
   }
 }
 
@@ -980,7 +1235,7 @@ function updateEditNames(){
   var sel=document.getElementById('editName');
   var MEMBERS=getMembers();
   sel.innerHTML='<option value="">— เลือกชื่อ —</option>'
-    +(MEMBERS[dept]||[]).map(function(n){return'<option value="'+n+'">'+n+'</option>';}).join('');
+    +(MEMBERS[dept]||[]).map(function(m){var n=m.name||m;return'<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
 }
 async function saveEdit(){
   var id=document.getElementById('editId').value;
@@ -1010,12 +1265,14 @@ async function saveEdit(){
 // ════════════════════════════════════════════
 //  MEMBER MANAGEMENT
 // ════════════════════════════════════════════
-function openMemberModal(){
+async function openMemberModal(){
+  await loadMembers();
   renderMemberEditList();
   document.getElementById('memberModal').classList.remove('hidden');
 }
-function closeMemberModal(){
+async function closeMemberModal(){
   document.getElementById('memberModal').classList.add('hidden');
+  await loadMembers();
   updateNames();
   renderMemberList();
 }
@@ -1025,43 +1282,64 @@ function renderMemberEditList(){
   ['HR','IT','IA'].forEach(function(dept){
     var cls=dept.toLowerCase();
     html+='<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;padding-top:8px;border-top:1px solid var(--border)"><span class="dept-tag '+cls+'">'+dept+'</span></div>';
-    (MEMBERS[dept]||[]).forEach(function(name,idx){
+    (MEMBERS[dept]||[]).forEach(function(member){
+      var id=member.id||'';
+      var name=member.name||member;
       html+='<div class="member-edit-row">'
-        +'<input type="text" value="'+esc(name)+'" onchange="renameMember(\''+dept+'\','+idx+',this.value)" style="margin:0;flex:1" />'
-        +'<button class="btn-icon" onclick="removeMember(\''+dept+'\','+idx+')" title="ลบ">🗑</button>'
+        +'<input type="text" value="'+esc(name)+'" onchange="renameMember(\''+dept+'\',\''+id+'\',this.value)" style="margin:0;flex:1" />'
+        +'<button class="btn-icon" onclick="removeMember(\''+dept+'\',\''+id+'\')" title="ลบ">🗑</button>'
         +'</div>';
     });
   });
+  if(!html)html='<div style="color:var(--text3);font-size:13px;padding:8px 0">ยังไม่มีสมาชิก — เพิ่มด้านบนได้เลย</div>';
   document.getElementById('memberEditList').innerHTML=html;
 }
-function addMember(){
+async function addMember(){
   var name=document.getElementById('newMemberName').value.trim();
   var dept=document.getElementById('newMemberDept').value;
   if(!name){showToast('กรุณาใส่ชื่อ','error');return;}
   var MEMBERS=getMembers();
-  if(!MEMBERS[dept])MEMBERS[dept]=[];
-  if(MEMBERS[dept].includes(name)){showToast('มีชื่อนี้แล้ว','error');return;}
-  MEMBERS[dept].push(name);
-  saveMembers(MEMBERS);
-  document.getElementById('newMemberName').value='';
-  renderMemberEditList();
-  showToast('✅ เพิ่ม '+name+' แล้ว','success');
+  var exists=(MEMBERS[dept]||[]).find(function(m){return m.name===name;});
+  if(exists){showToast('มีชื่อนี้แล้ว','error');return;}
+  var MUTATION=`mutation AddMember($dept:String!,$name:String!){insert_work_members_one(object:{dept:$dept,name:$name}){id dept name}}`;
+  try{
+    var btn=document.getElementById('addMemberBtn');
+    if(btn){btn.disabled=true;}
+    var data=await gql(MUTATION,{dept:dept,name:name});
+    document.getElementById('newMemberName').value='';
+    await loadMembers();
+    renderMemberEditList();
+    showToast('✅ เพิ่ม '+name+' แล้ว (ทุกเครื่องเห็น)','success');
+  }catch(e){
+    showToast('เพิ่มไม่ได้: '+e.message,'error');
+  }finally{
+    var btn=document.getElementById('addMemberBtn');
+    if(btn){btn.disabled=false;}
+  }
 }
-function removeMember(dept,idx){
+async function removeMember(dept,memberId){
   if(!confirm('ลบสมาชิกคนนี้?'))return;
-  var MEMBERS=getMembers();
-  MEMBERS[dept].splice(idx,1);
-  saveMembers(MEMBERS);
-  renderMemberEditList();
-  showToast('🗑️ ลบแล้ว','success');
+  var MUTATION=`mutation DeleteMember($id:uuid!){delete_work_members_by_pk(id:$id){id}}`;
+  try{
+    await gql(MUTATION,{id:memberId});
+    await loadMembers();
+    renderMemberEditList();
+    showToast('🗑️ ลบแล้ว (ทุกเครื่องเห็น)','success');
+  }catch(e){
+    showToast('ลบไม่ได้: '+e.message,'error');
+  }
 }
-function renameMember(dept,idx,newName){
+async function renameMember(dept,memberId,newName){
   newName=newName.trim();
   if(!newName)return;
-  var MEMBERS=getMembers();
-  MEMBERS[dept][idx]=newName;
-  saveMembers(MEMBERS);
-  showToast('✅ แก้ไขชื่อแล้ว','success');
+  var MUTATION=`mutation RenameMember($id:uuid!,$name:String!){update_work_members_by_pk(pk_columns:{id:$id},_set:{name:$name}){id}}`;
+  try{
+    await gql(MUTATION,{id:memberId,name:newName});
+    await loadMembers();
+    showToast('✅ แก้ไขชื่อแล้ว (ทุกเครื่องเห็น)','success');
+  }catch(e){
+    showToast('แก้ไขไม่ได้: '+e.message,'error');
+  }
 }
 
 // ════════════════════════════════════════════
@@ -1137,7 +1415,7 @@ function renderTable(reports,flashFirst){
     var flash=(flashFirst&&i===0)?' class="new-row"':'';
     return'<tr'+flash+'>'
       +'<td><span class="dept-tag '+cls+'">'+r.dept+'</span></td>'
-      +'<td style="font-size:13.5px;font-weight:600;color:#0d1f3c">'+esc(r.reporter)+'</td>'
+      +'<td style="font-size:13.5px;font-weight:600;color:var(--text)">'+esc(r.reporter)+'</td>'
       +'<td>'
       +'<div class="topic-text">'+esc(r.result||'')+(isLatest?' <span class="latest-badge">ล่าสุด</span>':'')+'</div>'
       +'</td>'
@@ -1190,7 +1468,8 @@ function renderMemberList(){
   allReports.forEach(function(r){counts[r.reporter]=(counts[r.reporter]||0)+1;});
   var html='';
   Object.keys(MEMBERS).forEach(function(dept){
-    MEMBERS[dept].forEach(function(name){
+    MEMBERS[dept].forEach(function(member){
+      var name=member.name||member;
       var cls=dept.toLowerCase();
       var init=name.split(' ').map(function(w){return w[0];}).join('').slice(0,2);
       html+='<div class="member-item">'
@@ -1217,14 +1496,17 @@ function updateNames(){
   var MEMBERS=getMembers();
   if(!dept){sel.innerHTML='<option value="">— เลือกฝ่ายก่อน —</option>';return;}
   sel.innerHTML='<option value="">— เลือกชื่อ —</option>'
-    +(MEMBERS[dept]||[]).map(function(n){return'<option value="'+n+'">'+n+'</option>';}).join('');
+    +(MEMBERS[dept]||[]).map(function(m){var n=m.name||m;return'<option value="'+esc(n)+'">'+esc(n)+'</option>';}).join('');
 }
 
 // ════════════════════════════════════════════
 //  EXPORT PDF  (jsPDF + autoTable)
 // ════════════════════════════════════════════
 function exportPDF(){
+  var savedFilter=filter.date;
+  filter.date='latest';
   var filtered=getSorted(getFiltered(allReports));
+  filter.date=savedFilter;
   if(!filtered.length){showToast('ไม่มีข้อมูลให้ส่งออก','error');return;}
   // ใส่ title ก่อน print
   var titleEl=document.getElementById('printTitle');
@@ -1257,20 +1539,23 @@ function exportPDF(){
 // ════════════════════════════════════════════
 function exportExcel(){
   try{
+    var savedFilter=filter.date;
+    filter.date='latest';
     var filtered=getSorted(getFiltered(allReports));
+    filter.date=savedFilter;
     if(!filtered.length){showToast('ไม่มีข้อมูลให้ส่งออก','error');return;}
     var data=filtered.map(function(r){
       var dt=new Date(r.created_at);
       var t=dt.toLocaleString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-      return{ฝ่าย:r.dept,ชื่อ:r.reporter,ผลงาน:r.result||'',เวลา:t};
+      return{ฝ่าย:r.dept,ชื่อ:r.reporter,ผลงาน:r.result||'',สถานะ:r.status||'',เวลา:t};
     });
     var ws=XLSX.utils.json_to_sheet(data);
     // Column widths
-    ws['!cols']=[{wch:8},{wch:20},{wch:45},{wch:20}];
+    ws['!cols']=[{wch:8},{wch:20},{wch:45},{wch:14},{wch:20}];
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'Work Report');
-    var label=filter.date==='latest'?'latest':'all';
-    XLSX.writeFile(wb,'work_report_'+label+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+    var label=latestDate?new Date(latestDate).toLocaleDateString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-'):'latest';
+    XLSX.writeFile(wb,'work_report_'+label+'.xlsx');
     showToast('📊 ส่งออก Excel สำเร็จ','success');
   }catch(e){
     showToast('ส่งออก Excel ไม่ได้: '+e.message,'error');
@@ -1309,9 +1594,7 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay){
   });
 });
 // Enter key submit
-document.getElementById('result').addEventListener('keydown',function(e){
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitReport();}
-});
+// topicInput Enter key handled inline via onkeydown
 
 // ════════════════════════════════════════════
 //  AI LINK  (with auto-prompt + clipboard)
@@ -1489,14 +1772,34 @@ function openAiLink(){
 document.getElementById('aiModal').addEventListener('click',function(e){
   if(e.target===this) closeAIModal();
 });
+document.getElementById('reportModal').addEventListener('click',function(e){
+  if(e.target===this) closeReportModal();
+});
+// ════════════════════════════════════════════
+//  THEME
+// ════════════════════════════════════════════
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  var knob = document.getElementById('themeKnob');
+  if(knob) knob.textContent = theme === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('wr_theme', theme);
+}
+function toggleTheme(){
+  var current = document.documentElement.getAttribute('data-theme') || 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
 window.onload=function(){
+  // apply saved theme immediately
+  var savedTheme = localStorage.getItem('wr_theme') || 'light';
+  applyTheme(savedTheme);
+
   if(!localStorage.getItem('nhost_subdomain'))localStorage.setItem('nhost_subdomain',DEFAULT_CONFIG.subdomain);
   if(!localStorage.getItem('nhost_region'))localStorage.setItem('nhost_region',DEFAULT_CONFIG.region);
   if(!localStorage.getItem('nhost_secret'))localStorage.setItem('nhost_secret',DEFAULT_CONFIG.secret);
-  updateNames();
-  renderMemberList();
+  loadMembers();
   loadReports();
-  refreshTimer=setInterval(loadReports,15000);
+  refreshTimer=setInterval(function(){loadReports();loadMembers();},15000);
 };
 </script>
 </body>
