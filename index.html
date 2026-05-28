@@ -301,6 +301,8 @@ textarea{resize:vertical;min-height:84px;line-height:1.55}
 }
 .btn-export.pdf{background:rgba(224,92,58,.1);color:var(--accent3);border:1.5px solid rgba(224,92,58,.28)}
 .btn-export.pdf:hover{background:rgba(224,92,58,.18);transform:translateY(-1px);box-shadow:0 3px 8px rgba(224,92,58,.2)}
+.btn-export.excel{background:rgba(5,150,105,.1);color:var(--accent2);border:1.5px solid rgba(5,150,105,.28)}
+.btn-export.excel:hover{background:rgba(5,150,105,.18);transform:translateY(-1px);box-shadow:0 3px 8px rgba(5,150,105,.2)}
 .btn-export.ai{background:linear-gradient(135deg,rgba(107,79,187,.12) 0%,rgba(26,111,212,.1) 100%);color:var(--accent4);border:1.5px solid rgba(107,79,187,.35);font-weight:700}
 .btn-export.ai:hover{background:linear-gradient(135deg,rgba(107,79,187,.22) 0%,rgba(26,111,212,.18) 100%);transform:translateY(-1px);box-shadow:0 3px 10px rgba(107,79,187,.25)}
 
@@ -749,6 +751,17 @@ tr:hover td{background:var(--surface2)}
         </div>
       </div>
     </div>
+    <!-- View All Data Button -->
+    <div class="card">
+      <div class="card-body" style="padding:14px 18px">
+        <button class="btn btn-primary" onclick="openViewAllModal()" style="font-size:14px;padding:12px 20px;letter-spacing:.2px;background:linear-gradient(135deg,var(--accent2) 0%,var(--accent) 100%)">
+          📋 ดูข้อมูลทั้งหมด
+        </button>
+        <div style="margin-top:10px;font-size:12px;color:var(--text3);text-align:center;line-height:1.55">
+          รวมทุกรายการที่เพิ่มเข้ามา<br>กรองตามวัน / ฝ่าย ได้
+        </div>
+      </div>
+    </div>
     <!-- Members -->
     <div class="card">
       <div class="card-header">
@@ -780,9 +793,9 @@ tr:hover td{background:var(--surface2)}
       </select>
       <select class="filter-select" id="filterDate" onchange="applyFilter()">
         <option value="">ทุกวัน</option>
-        <option value="today">วันนี้</option>
-        <option value="week">สัปดาห์นี้</option>
-        <option value="month">เดือนนี้</option>
+        <option value="today" id="optToday">วันนี้</option>
+        <option value="week" id="optWeek">สัปดาห์นี้</option>
+        <option value="month" id="optMonth">เดือนนี้</option>
         <option value="latest">ล่าสุด (วันที่เพิ่มล่าสุด)</option>
       </select>
       <input type="text" class="filter-input" id="filterSearch" placeholder="🔍 ค้นหาหัวข้อ / ชื่อ…" oninput="applyFilter()" />
@@ -818,6 +831,78 @@ tr:hover td{background:var(--surface2)}
         </table>
       </div>
       <div class="pagination" id="paginationBar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── View All Data Modal ── -->
+<div class="modal-overlay hidden" id="viewAllModal">
+  <div class="modal" style="width:860px;max-width:98vw;max-height:92vh;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+      <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📋</div>
+      <div>
+        <h2 style="font-size:17px;margin-bottom:2px">ข้อมูลทั้งหมด</h2>
+        <p style="color:var(--text2);font-size:12.5px;margin:0">รวมทุกรายการที่บันทึกเข้ามา — กรองและค้นหาได้</p>
+      </div>
+      <button onclick="closeViewAllModal()" style="margin-left:auto;background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:4px 8px;border-radius:6px;line-height:1" title="ปิด">×</button>
+    </div>
+    <div style="height:1px;background:var(--border);margin:12px 0"></div>
+
+    <!-- Filter Row -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+      <select class="filter-select" id="vaFilterDept" onchange="updateVaNames();renderViewAll()">
+        <option value="">ทุกฝ่าย</option>
+        <option value="HR">HR</option>
+        <option value="IT">IT</option>
+        <option value="IA">IA</option>
+      </select>
+      <select class="filter-select" id="vaFilterName" onchange="renderViewAll()">
+        <option value="">ทุกชื่อ</option>
+      </select>
+      <select class="filter-select" id="vaFilterDate" onchange="onVaDateModeChange()">
+        <option value="">ทุกวัน</option>
+        <option value="today" id="vaOptToday">วันนี้</option>
+        <option value="week" id="vaOptWeek">สัปดาห์นี้</option>
+        <option value="month" id="vaOptMonth">เดือนนี้</option>
+        <option value="latest">ล่าสุด (วันที่เพิ่มล่าสุด)</option>
+        <option value="custom">📅 เลือกวันที่เอง…</option>
+      </select>
+      <input type="text" class="filter-input" id="vaFilterSearch" placeholder="🔍 ค้นหาหัวข้อ…" oninput="renderViewAll()" style="flex:1;min-width:120px;margin:0" />
+      <span id="vaRowCount" style="font-size:12px;font-family:var(--mono);color:var(--accent);white-space:nowrap"></span>
+    </div>
+    <!-- Custom date picker row (hidden by default) -->
+    <div id="vaCustomDateRow" style="display:none;gap:8px;align-items:center;margin-bottom:10px;background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;flex-wrap:wrap">
+      <span style="font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap">📅 เลือกวันที่:</span>
+      <input type="date" id="vaCustomDate" onchange="renderViewAll()"
+        style="margin:0;padding:7px 11px;font-size:13.5px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:var(--mono);cursor:pointer;outline:none;width:auto" />
+      <button onclick="document.getElementById('vaCustomDate').value=new Date().toISOString().slice(0,10);renderViewAll();"
+        style="padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer">วันนี้</button>
+      <button onclick="var d=new Date();d.setDate(d.getDate()-1);document.getElementById('vaCustomDate').value=d.toISOString().slice(0,10);renderViewAll();"
+        style="padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer">เมื่อวาน</button>
+      <span id="vaCustomDateLabel" style="font-size:12px;color:var(--accent);font-family:var(--mono)"></span>
+    </div>
+
+    <!-- Table -->
+    <div style="overflow-y:auto;flex:1;border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <table id="vaTable" style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th width="75" style="position:sticky;top:0;background:var(--surface2);border-bottom:2px solid var(--border2);padding:10px 12px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;text-align:left">ฝ่าย</th>
+            <th width="130" style="position:sticky;top:0;background:var(--surface2);border-bottom:2px solid var(--border2);padding:10px 12px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;text-align:left">ชื่อ</th>
+            <th style="position:sticky;top:0;background:var(--surface2);border-bottom:2px solid var(--border2);padding:10px 12px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;text-align:left;min-width:240px">ผลงาน / รายละเอียด</th>
+            <th width="120" style="position:sticky;top:0;background:var(--surface2);border-bottom:2px solid var(--border2);padding:10px 12px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;text-align:left">สถานะ</th>
+            <th width="130" style="position:sticky;top:0;background:var(--surface2);border-bottom:2px solid var(--border2);padding:10px 12px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;text-align:left">เวลา</th>
+          </tr>
+        </thead>
+        <tbody id="vaBody">
+          <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3)">กำลังโหลด…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="height:1px;background:var(--border);margin:14px 0 10px"></div>
+    <div style="display:flex;justify-content:flex-end">
+      <button onclick="closeViewAllModal()" class="btn-ghost" style="min-width:100px">ปิด</button>
     </div>
   </div>
 </div>
@@ -1011,7 +1096,15 @@ async function loadMembers(){
       if(m[r.dept])m[r.dept].push({id:r.id,name:r.name});
     });
     _membersCache=m;
-    updateNames();
+    if(document.getElementById('reportModal').classList.contains('hidden')){
+      updateNames();
+    } else {
+      var savedDept = document.getElementById('dept').value;
+      var savedName = document.getElementById('name').value;
+      updateNames();
+      if(savedDept) document.getElementById('dept').value = savedDept;
+      if(savedName) setTimeout(function(){ document.getElementById('name').value = savedName; }, 0);
+    }
     renderMemberList();
   }catch(e){
     // ถ้ายังไม่มีตาราง work_members แสดงคำแนะนำ
@@ -1079,6 +1172,7 @@ async function loadReports(){
     }
     renderTable(allReports,allReports.length>prev&&prev>0);
     updateStats();
+    renderMemberList();
     setStatus(true);
   }catch(e){
     setStatus(false,e.message);
@@ -1468,7 +1562,11 @@ function updateStats(){
 function renderMemberList(){
   var MEMBERS=getMembers();
   var counts={};
-  allReports.forEach(function(r){counts[r.reporter]=(counts[r.reporter]||0)+1;});
+  var today=new Date().toDateString();
+  allReports.forEach(function(r){
+    if(new Date(r.created_at).toDateString()===today)
+      counts[r.reporter]=(counts[r.reporter]||0)+1;
+  });
   var html='';
   Object.keys(MEMBERS).forEach(function(dept){
     MEMBERS[dept].forEach(function(member){
@@ -1771,12 +1869,120 @@ function openAiLink(){
   showToast('🚀 เปิด AI พร้อมข้อมูลแล้ว','success');
 }
 
-// close on overlay click
-document.getElementById('aiModal').addEventListener('click',function(e){
-  if(e.target===this) closeAIModal();
-});
-document.getElementById('reportModal').addEventListener('click',function(e){
-  if(e.target===this) closeReportModal();
+// ════════════════════════════════════════════
+//  VIEW ALL DATA MODAL
+// ════════════════════════════════════════════
+function openViewAllModal(){
+  document.getElementById('viewAllModal').classList.remove('hidden');
+  // sync date label options like the main page
+  var now = new Date();
+  var dayNames = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  var monthNamesShort = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var monthNamesFull = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  var d = now.getDate(), m = monthNamesShort[now.getMonth()], mFull = monthNamesFull[now.getMonth()];
+  var y = now.getFullYear() + 543, dow = dayNames[now.getDay()];
+  var el;
+  el = document.getElementById('vaOptToday'); if(el) el.textContent = 'วันนี้ (' + dow + '. ' + d + ' ' + m + ')';
+  el = document.getElementById('vaOptWeek');  if(el) el.textContent = 'สัปดาห์นี้ (7 วันล่าสุด)';
+  el = document.getElementById('vaOptMonth'); if(el) el.textContent = 'เดือนนี้ (' + mFull + ' ' + y + ')';
+  updateVaNames();
+  renderViewAll();
+}
+function closeViewAllModal(){
+  document.getElementById('viewAllModal').classList.add('hidden');
+}
+function updateVaNames(){
+  var dept = document.getElementById('vaFilterDept').value;
+  var sel  = document.getElementById('vaFilterName');
+  var MEMBERS = getMembers();
+  var prev = sel.value;
+  if(!dept){
+    // รวมทุกฝ่าย
+    var allNames = [];
+    ['HR','IT','IA'].forEach(function(d){
+      (MEMBERS[d]||[]).forEach(function(m){ allNames.push({name:m.name||m, dept:d}); });
+    });
+    sel.innerHTML = '<option value="">ทุกชื่อ</option>'
+      + allNames.map(function(m){ return '<option value="'+esc(m.name)+'">'+esc(m.name)+' ('+m.dept+')</option>'; }).join('');
+  } else {
+    sel.innerHTML = '<option value="">ทุกชื่อ</option>'
+      + (MEMBERS[dept]||[]).map(function(m){ var n=m.name||m; return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('');
+  }
+  // คืนค่าเดิมถ้ายังมีอยู่
+  if(prev) sel.value = prev;
+}
+function onVaDateModeChange(){
+  var mode = document.getElementById('vaFilterDate').value;
+  var row = document.getElementById('vaCustomDateRow');
+  if(mode === 'custom'){
+    row.style.display = 'flex';
+    // default to today if empty
+    var inp = document.getElementById('vaCustomDate');
+    if(!inp.value) inp.value = new Date().toISOString().slice(0,10);
+  } else {
+    row.style.display = 'none';
+  }
+  renderViewAll();
+}
+function renderViewAll(){
+  var dept   = document.getElementById('vaFilterDept').value;
+  var name   = document.getElementById('vaFilterName').value;
+  var date   = document.getElementById('vaFilterDate').value;
+  var search = document.getElementById('vaFilterSearch').value.toLowerCase();
+  var customDate = date === 'custom' ? document.getElementById('vaCustomDate').value : '';
+  var now = new Date();
+
+  // update custom date label
+  var labelEl = document.getElementById('vaCustomDateLabel');
+  if(labelEl && customDate){
+    var cd = new Date(customDate + 'T00:00:00');
+    labelEl.textContent = cd.toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  } else if(labelEl){ labelEl.textContent = ''; }
+
+  var rows = allReports.filter(function(r){
+    if(dept   && r.dept !== dept) return false;
+    if(name   && r.reporter !== name) return false;
+    if(search && !(r.reporter + (r.result||'')).toLowerCase().includes(search)) return false;
+    if(date){
+      var rd = new Date(r.created_at);
+      if(date === 'today'  && rd.toDateString() !== now.toDateString()) return false;
+      if(date === 'week'   && (now - rd) / 86400000 > 7) return false;
+      if(date === 'month'  && (rd.getMonth() !== now.getMonth() || rd.getFullYear() !== now.getFullYear())) return false;
+      if(date === 'latest' && latestDate && rd.toDateString() !== latestDate) return false;
+      if(date === 'custom' && customDate){
+        var rdStr = rd.getFullYear()+'-'+String(rd.getMonth()+1).padStart(2,'0')+'-'+String(rd.getDate()).padStart(2,'0');
+        if(rdStr !== customDate) return false;
+      }
+    }
+    return true;
+  });
+  // sort by created_at desc
+  rows = rows.slice().sort(function(a,b){ return new Date(b.created_at) - new Date(a.created_at); });
+  document.getElementById('vaRowCount').textContent = rows.length ? rows.length + ' รายการ' : '';
+  var tbody = document.getElementById('vaBody');
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text3)">📭 ไม่มีรายการ</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(r, i){
+    var cls = r.dept.toLowerCase();
+    var dt = new Date(r.created_at);
+    var t = dt.toLocaleString('th-TH',{month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    var rowBg = i % 2 === 1 ? 'background:var(--surface2)' : '';
+    return '<tr style="' + rowBg + '">'
+      + '<td style="padding:10px 12px;border-bottom:1px solid var(--border)"><span class="dept-tag ' + cls + '">' + r.dept + '</span></td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text)">' + esc(r.reporter) + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">' + esc(r.result||'') + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid var(--border)">' + (r.status ? statusTagHtml(r.status) : '<span style="color:var(--text3)">—</span>') + '</td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid var(--border)"><span class="time-text">' + t + '</span></td>'
+      + '</tr>';
+  }).join('');
+}
+
+// close on overlay click — handled by querySelectorAll('.modal-overlay') above
+// viewAllModal: explicit handler to call closeViewAllModal (resets state)
+document.getElementById('viewAllModal').addEventListener('click',function(e){
+  if(e.target===this) closeViewAllModal();
 });
 // ════════════════════════════════════════════
 //  THEME
@@ -1792,6 +1998,52 @@ function toggleTheme(){
   applyTheme(current === 'dark' ? 'light' : 'dark');
 }
 
+// ════════════════════════════════════════════
+//  REAL-TIME DATE LABELS + MIDNIGHT AUTO-RESET
+// ════════════════════════════════════════════
+var _lastDateString = new Date().toDateString(); // จำวันที่ตอนโหลด
+
+function updateDateLabels(){
+  var now = new Date();
+  var dayNames = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  var monthNamesShort = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var monthNamesFull = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  var d = now.getDate();
+  var m = monthNamesShort[now.getMonth()];
+  var mFull = monthNamesFull[now.getMonth()];
+  var y = now.getFullYear() + 543; // พ.ศ.
+  var dow = dayNames[now.getDay()];
+
+  // วันนี้: "วันนี้ (พฤ. 28 พ.ค.)"
+  var optToday = document.getElementById('optToday');
+  if(optToday) optToday.textContent = 'วันนี้ (' + dow + '. ' + d + ' ' + m + ')';
+
+  // สัปดาห์นี้
+  var optWeek = document.getElementById('optWeek');
+  if(optWeek) optWeek.textContent = 'สัปดาห์นี้ (7 วันล่าสุด)';
+
+  // เดือนนี้: "เดือนนี้ (พฤษภาคม 2568)"
+  var optMonth = document.getElementById('optMonth');
+  if(optMonth) optMonth.textContent = 'เดือนนี้ (' + mFull + ' ' + y + ')';
+
+  // ── ตรวจว่าวันเปลี่ยนหรือยัง (เที่ยงคืน) ──
+  var todayStr = now.toDateString();
+  if(todayStr !== _lastDateString){
+    _lastDateString = todayStr;
+
+    // reset filter กลับเป็น "วันนี้" (วันใหม่ = ยังไม่มีข้อมูล แสดงว่าง)
+    document.getElementById('filterDate').value = 'today';
+    filter.date = 'today';
+
+    // โหลดข้อมูลใหม่และ re-render
+    loadReports();
+
+    // แจ้งเตือนเบาๆ
+    showToast('🌅 ขึ้นวันใหม่แล้ว! (' + d + ' ' + m + ') รีเซตเป็นวันนี้อัตโนมัติ', 'success');
+  }
+}
+
 window.onload=function(){
   // apply saved theme immediately
   var savedTheme = localStorage.getItem('wr_theme') || 'light';
@@ -1800,6 +2052,15 @@ window.onload=function(){
   if(!localStorage.getItem('nhost_subdomain'))localStorage.setItem('nhost_subdomain',DEFAULT_CONFIG.subdomain);
   if(!localStorage.getItem('nhost_region'))localStorage.setItem('nhost_region',DEFAULT_CONFIG.region);
   if(!localStorage.getItem('nhost_secret'))localStorage.setItem('nhost_secret',DEFAULT_CONFIG.secret);
+
+  // ตั้ง default filter เป็น "วันนี้" ทุกครั้งที่โหลดหน้า
+  document.getElementById('filterDate').value = 'today';
+  filter.date = 'today';
+
+  // อัปเดต label วันที่ทันที และวนทุก 30 วินาที (จับเที่ยงคืนได้แม่น)
+  updateDateLabels();
+  setInterval(updateDateLabels, 30000);
+
   loadMembers();
   loadReports();
   refreshTimer=setInterval(function(){loadReports();loadMembers();},15000);
