@@ -1604,16 +1604,23 @@ function updateNames(){
 //  EXPORT PDF  (jsPDF + autoTable)
 // ════════════════════════════════════════════
 function exportPDF(){
-  var savedFilter=filter.date;
-  filter.date='latest';
+  // ใช้ filter ที่ผู้ใช้เลือกอยู่ ไม่บังคับ latest
   var filtered=getSorted(getFiltered(allReports));
-  filter.date=savedFilter;
   if(!filtered.length){showToast('ไม่มีข้อมูลให้ส่งออก','error');return;}
+  // สร้าง label จาก filter ปัจจุบัน
+  var fd=filter.date;
+  var dateLabel='';
+  if(!fd||fd===''){dateLabel='ทั้งหมด';}
+  else if(fd==='today'){dateLabel='วันนี้ — '+new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});}
+  else if(fd==='week'){dateLabel='7 วันล่าสุด';}
+  else if(fd==='month'){dateLabel='เดือนนี้ — '+new Date().toLocaleDateString('th-TH',{month:'long',year:'numeric'});}
+  else if(fd==='latest'){dateLabel='วันล่าสุด'+(latestDate?' ('+new Date(latestDate).toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})+')':'');}
+  else{dateLabel=new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});}
   // ใส่ title ก่อน print
   var titleEl=document.getElementById('printTitle');
   var subEl=document.getElementById('printSubtitle');
   var headerEl=document.getElementById('printHeader');
-  titleEl.textContent='Work Report — '+new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'});
+  titleEl.textContent='Work Report — '+dateLabel;
   subEl.textContent='จำนวน '+filtered.length+' รายการ  |  ส่งออกเมื่อ '+new Date().toLocaleTimeString('th-TH');
   headerEl.style.display='block';
   // render เฉพาะข้อมูลที่ filter ไว้
@@ -1631,7 +1638,7 @@ function exportPDF(){
     allReports=saved;
     renderTable(saved);
     document.getElementById('printHeader').style.display='none';
-    showToast('📄 ส่งออก PDF สำเร็จ','success');
+    showToast('📄 ส่งออก PDF สำเร็จ ('+filtered.length+' รายการ)','success');
   },300);
 }
 
@@ -1640,10 +1647,8 @@ function exportPDF(){
 // ════════════════════════════════════════════
 function exportExcel(){
   try{
-    var savedFilter=filter.date;
-    filter.date='latest';
+    // ใช้ filter ที่ผู้ใช้เลือกอยู่ ไม่บังคับ latest
     var filtered=getSorted(getFiltered(allReports));
-    filter.date=savedFilter;
     if(!filtered.length){showToast('ไม่มีข้อมูลให้ส่งออก','error');return;}
     var data=filtered.map(function(r){
       var dt=new Date(r.created_at);
@@ -1655,9 +1660,17 @@ function exportExcel(){
     ws['!cols']=[{wch:8},{wch:20},{wch:45},{wch:14},{wch:20}];
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'Work Report');
-    var label=latestDate?new Date(latestDate).toLocaleDateString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-'):'latest';
+    // ชื่อไฟล์ตาม filter ที่เลือก
+    var fd=filter.date;
+    var label='';
+    if(!fd||fd===''){label='all_'+new Date().toISOString().slice(0,10);}
+    else if(fd==='today'){label=new Date().toISOString().slice(0,10);}
+    else if(fd==='week'){label='7days_'+new Date().toISOString().slice(0,10);}
+    else if(fd==='month'){label=new Date().toISOString().slice(0,7);}
+    else if(fd==='latest'){label=latestDate?new Date(latestDate).toLocaleDateString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-'):'latest';}
+    else{label=new Date().toISOString().slice(0,10);}
     XLSX.writeFile(wb,'work_report_'+label+'.xlsx');
-    showToast('📊 ส่งออก Excel สำเร็จ','success');
+    showToast('📊 ส่งออก Excel สำเร็จ ('+filtered.length+' รายการ)','success');
   }catch(e){
     showToast('ส่งออก Excel ไม่ได้: '+e.message,'error');
   }
