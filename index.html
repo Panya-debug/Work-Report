@@ -610,61 +610,20 @@ tr:hover td{background:var(--surface2)}
     background:var(--border2);border-radius:4px;
     position:absolute;top:12px;left:50%;transform:translateX(-50%);
   }
-  /* Grouping panels inside Modal for step-by-step clarity */
+  /* FIXED: Removed modal-section-card, modal-step-badge, modal-step-title, topic-item
+     from mobile-only block — moved to global CSS above to ensure consistent rendering
+     on both desktop and mobile. Only mobile-specific overrides remain here. */
+
+  /* Mobile override: compact padding for section cards */
   .modal-section-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px 12px;
-    margin-bottom: 16px;
+    padding: 12px 10px;
+    margin-bottom: 14px;
   }
-  .modal-step-badge {
-    display: inline-block;
-    background: var(--accent);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 2px 8px;
-    border-radius: 20px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  .modal-step-title {
-    font-size: 13.5px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  /* Better topic items in report modal */
-  .topic-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 13.5px;
-    margin-bottom: 4px;
-  }
-  .topic-num {
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
-  }
-  .topic-status-inline {
-    font-size: 10.5px;
-    font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 6px;
-    margin-left:auto;
-  }
-  .topic-remove {
-    margin-left: 4px;
+
+  /* FIXED: Stack Step 1 grid on mobile (ฝ่าย + ชื่อ) to prevent squished selects */
+  #reportModal .step1-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0 !important;
   }
   @keyframes modalInMobile{
     from{transform:translateY(100%);opacity:0}
@@ -878,6 +837,42 @@ tr:hover td{background:var(--surface2)}
 #printTitle { display: none; font-size: 20px; font-weight: 700; }
 #printSubtitle { display: none; font-size: 12px; color: rgba(255,255,255,.75); }
 
+/* ══════════════════════════════════════════
+   MODAL STEP CARDS — Global (desktop + mobile consistent)
+   FIXED: Previously only defined inside @media(max-width:768px),
+   causing these styles to be invisible on desktop (no card bg,
+   no badge, no step title). Now defined globally so both views
+   share the same structured layout.
+══════════════════════════════════════════ */
+.modal-section-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 14px;
+  margin-bottom: 16px;
+}
+.modal-step-badge {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.modal-step-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ── Status Picker ── */
 .status-picker{display:flex;gap:7px;margin-bottom:4px;flex-wrap:wrap}
 .status-btn{
@@ -917,6 +912,15 @@ tr:hover td{background:var(--surface2)}
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 .topic-text-label{flex:1;line-height:1.45}
+/* FIXED: topic-status-inline was only in @media mobile — now global */
+.topic-status-inline {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-left: auto;
+  white-space: nowrap;
+}
 .topic-remove{
   background:none;border:none;cursor:pointer;
   color:var(--text3);font-size:16px;padding:2px 4px;
@@ -964,7 +968,7 @@ tr:hover td{background:var(--surface2)}
         <span class="modal-step-badge">ขั้นตอนที่ 1</span>
         <span>ข้อมูลผู้บันทึก</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="step1-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div>
           <label>ฝ่าย</label>
           <select id="dept" onchange="updateNames()" style="margin-bottom:0">
