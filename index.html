@@ -2,7 +2,12 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f0f4f8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1623" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Work Report — Nhost</title>
 <!-- SheetJS for Excel export -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -88,7 +93,7 @@ body{
 header{
   background:var(--header-bg);
   border-bottom:1px solid var(--header-border);
-  padding:0 32px;height:66px;
+  padding:0 32px;padding-left:max(32px,env(safe-area-inset-left));padding-right:max(32px,env(safe-area-inset-right));height:66px;
   display:flex;align-items:center;justify-content:space-between;
   position:sticky;top:0;z-index:100;
   backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
@@ -390,7 +395,7 @@ tr:hover td{background:var(--surface2)}
 
 /* ── Toast ── */
 #toast{
-  position:fixed;bottom:28px;right:28px;
+  position:fixed;bottom:28px;bottom:max(28px,calc(env(safe-area-inset-bottom) + 12px));right:28px;
   background:var(--surface);border:1px solid var(--border);
   border-radius:12px;padding:13px 20px;font-size:13.5px;
   box-shadow:var(--shadow-lg);
@@ -413,10 +418,332 @@ tr:hover td{background:var(--surface2)}
 .member-item{transition:var(--transition)}
 .member-item:hover{opacity:1!important;background:var(--surface2);border-radius:var(--radius-sm);padding-left:4px}
 
-@media(max-width:900px){
-  .container{grid-template-columns:1fr}
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .export-group{margin-left:0}
+/* ══════════════════════════════════════════
+   RESPONSIVE — TABLET (≤992px)
+══════════════════════════════════════════ */
+@media(max-width:992px){
+  .container{grid-template-columns:1fr;padding:16px 14px;gap:14px}
+  .stats-row{grid-template-columns:repeat(2,1fr);gap:10px}
+  .export-group{margin-left:0;width:100%}
+
+  /* Toolbar wraps neatly */
+  .toolbar{padding:10px 12px;gap:7px}
+  .filter-select,.filter-input{font-size:14px}
+
+  /* Sidebar reorder: action buttons first */
+  .sidebar{order:-1;flex-direction:row;flex-wrap:wrap;gap:10px}
+  .sidebar .card{flex:1 1 200px}
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+══════════════════════════════════════════ */
+@media(max-width:768px){
+  /* ── Body & Font ── */
+  body{font-size:14px}
+
+  /* ── Header ── */
+  header{
+    padding:0 14px;height:56px;
+    gap:8px;
+  }
+  .logo{gap:8px}
+  .logo-icon{width:30px;height:30px;font-size:13px;border-radius:8px}
+  .logo > div > div:first-child{font-size:13px}
+  .logo > div > div:last-child{display:none} /* hide "Nhost Edition" subtitle */
+  .header-actions{gap:6px}
+  .status-badge{padding:4px 10px;font-size:11px}
+  .status-badge span{display:none} /* hide text, keep dot only */
+  #statusBadge::after{content:'Live';font-size:11px;color:var(--text2);font-family:var(--mono)}
+
+  /* ── Layout ── */
+  .container{padding:16px 12px;gap:20px;display:flex;flex-direction:column}
+
+  /* ── Sidebar → Clean Side-by-Side buttons on mobile ── */
+  .sidebar{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0;
+  }
+  .sidebar .card{
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+  }
+  .sidebar .card .card-body{
+    padding: 0 !important;
+  }
+  .sidebar .card .btn-primary{
+    width: 100%;
+    height: 48px;
+    font-size: 13.5px;
+    padding: 0 10px;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar .card div[style*="text-align:center"]{display:none}
+
+  /* Members card — hide on mobile sidebar */
+  .sidebar .card:has(#memberList){display:none}
+
+  /* ── Stats Row ── */
+  .stats-row{
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-bottom:6px;
+  }
+  .stat-card{padding:16px 14px;border-radius:14px}
+  .stat-value{font-size:30px;letter-spacing:-1.2px}
+  .stat-label{font-size:9.5px;margin-bottom:8px}
+
+  /* ── Toolbar ── */
+  .toolbar{
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;padding:16px 14px;
+    border-radius:16px;
+  }
+  .toolbar .filter-select,
+  .toolbar .filter-input{
+    width:100%;font-size:15px;
+    margin-bottom:2px;
+  }
+  .export-group{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    gap:8px;width:100%;margin-left:0;
+    margin-top:4px;
+  }
+  .btn-export{
+    padding:10px 6px;font-size:12.5px;justify-content:center;
+    flex-direction:column;gap:2px;text-align:center;
+    border-radius:8px;
+  }
+  .btn-export span{display:none}
+
+  /* Refresh button full-width */
+  .toolbar > .btn[onclick="loadReports()"]{
+    width:100%;justify-content:center;
+    padding:10px 14px;
+    border-radius:8px;
+    margin-top:2px;
+  }
+
+  /* ── Table → Card-style on mobile ── */
+  .report-table-wrap{
+    border-radius:16px;
+  }
+  .report-table-wrap .table-header{
+    flex-direction:column;align-items:flex-start;gap:6px;
+    padding:14px 16px;
+  }
+  .realtime-badge{font-size:11px}
+
+  /* Hide table, show mobile cards */
+  #reportTable thead{display:none}
+  #reportTable tbody tr{
+    display:block;
+    border-bottom:1px solid var(--border);
+    padding:12px 14px;
+    position:relative;
+  }
+  #reportTable tbody tr:last-child{border-bottom:none}
+  #reportTable tbody tr td{
+    display:block;
+    border:none;padding:2px 0;font-size:13px;
+  }
+  #reportTable tbody tr td:empty{display:none}
+
+  /* Dept + status on same row */
+  #reportTable tbody tr td:nth-child(1){
+    display:inline-block;margin-right:6px;padding-bottom:6px;
+  }
+  #reportTable tbody tr td:nth-child(4){
+    display:inline-block;padding-bottom:6px;
+  }
+  /* Name */
+  #reportTable tbody tr td:nth-child(2){
+    font-weight:700;font-size:14px;padding-bottom:4px;
+  }
+  /* Topic/result */
+  #reportTable tbody tr td:nth-child(3){
+    padding-bottom:4px;
+  }
+  .topic-text{white-space:normal;max-width:100%}
+  /* Time */
+  #reportTable tbody tr td:nth-child(5){
+    color:var(--text3);font-size:11.5px;
+  }
+  /* Action buttons */
+  #reportTable tbody tr td:nth-child(6){
+    padding-top:8px;
+  }
+  .action-btns{gap:6px;flex-wrap:wrap}
+  .btn.btn-sm{padding:7px 12px;font-size:12px}
+
+  /* ── Pagination ── */
+  .pagination{padding:10px 12px;gap:5px;justify-content:center}
+  .page-btn{padding:6px 10px;font-size:12px;min-width:34px}
+
+  /* ── Modals — bottom-sheet on mobile ── */
+  .modal-overlay{padding:0;align-items:flex-end}
+  .modal{
+    border-radius:20px 20px 0 0;
+    width:100%;max-width:100%;
+    max-height:92vh;
+    padding:24px 16px calc(20px + env(safe-area-inset-bottom));
+    padding-top:32px; /* space for drag handle */
+    animation:modalInMobile .28s cubic-bezier(.32,.72,0,1);
+    position:relative;
+  }
+  /* Drag handle pill */
+  .modal::before{
+    content:'';
+    display:block;
+    width:40px;height:4px;
+    background:var(--border2);border-radius:4px;
+    position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  }
+  /* Grouping panels inside Modal for step-by-step clarity */
+  .modal-section-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px;
+    margin-bottom: 16px;
+  }
+  .modal-step-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .modal-step-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  /* Better topic items in report modal */
+  .topic-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13.5px;
+    margin-bottom: 4px;
+  }
+  .topic-num {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+  .topic-status-inline {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left:auto;
+  }
+  .topic-remove {
+    margin-left: 4px;
+  }
+  @keyframes modalInMobile{
+    from{transform:translateY(100%);opacity:0}
+    to{transform:translateY(0);opacity:1}
+  }
+  .modal h2{font-size:17px}
+  .modal-footer{
+    flex-direction:column-reverse;gap:8px;
+  }
+  .modal-footer .btn-ghost,
+  .modal-footer .btn-primary,
+  .modal-footer .btn{
+    width:100%;justify-content:center;
+    padding:13px 16px;font-size:15px;
+  }
+
+  /* Report Modal grid → stack */
+  #reportModal .modal > div[style*="grid-template-columns:1fr 1fr"]{
+    grid-template-columns:1fr;gap:0;
+  }
+
+  /* Status picker — larger touch targets */
+  .status-btn{
+    padding:11px 6px;font-size:13.5px;
+    min-height:44px;
+  }
+
+  /* Form inputs — 16px to prevent iOS zoom */
+  select,input,textarea{font-size:16px}
+  .filter-select,.filter-input{font-size:16px}
+
+  /* ── Toast ── */
+  #toast{
+    bottom:16px;left:12px;right:12px;
+    max-width:none;font-size:13px;
+    border-radius:14px;
+  }
+
+  /* ── AI Modal ── */
+  .ai-modal{width:100%}
+  .ai-tabs{gap:5px}
+  .ai-tab{font-size:12px;padding:8px 4px}
+
+  /* View All Modal table → scrollable */
+  #viewAllModal .modal{
+    width:100%;max-width:100%;
+    padding:16px 12px 24px;
+  }
+
+  /* Member modal list */
+  .member-edit-row{flex-wrap:wrap;gap:6px}
+  .member-edit-row .dept-sel{width:80px}
+
+  /* Sidebar members card hidden on mobile — show in main */
+  .main > #mobileMembersCard{display:block}
+}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE — SMALL PHONE (≤380px)
+══════════════════════════════════════════ */
+@media(max-width:380px){
+  .stats-row{grid-template-columns:1fr 1fr;gap:6px}
+  .stat-value{font-size:24px}
+  .export-group{grid-template-columns:1fr 1fr}
+  .btn-export:last-child{grid-column:1/-1}
+  header{padding:0 10px}
+  .container{padding:10px 8px}
+}
+
+/* ── Touch device improvements ── */
+@media(hover:none) and (pointer:coarse){
+  .btn,.btn-export,.btn-ghost,.page-btn,.status-btn,.btn-icon{
+    min-height:44px;
+  }
+  .member-actions{opacity:1} /* always show on touch */
+  th:hover{background:var(--surface2);color:var(--text3)} /* no hover on touch */
+  .stat-card:hover{transform:none;box-shadow:var(--shadow-md)} /* no lift on touch */
+  .btn-primary:hover{transform:none}
+  .btn-danger:hover,.btn-edit:hover,.btn-success:hover,.btn-ghost:hover{transform:none}
 }
 
 /* ── Modals ── */
@@ -488,49 +815,64 @@ tr:hover td{background:var(--surface2)}
 /* ── Print / PDF styles ── */
 @media print {
   * { -webkit-print-color-adjust: exact !important; color-adjust: exact !important; print-color-adjust: exact !important; }
-  body { background: #eef4fd !important; color: #0d1f3c !important; font-family: 'Sarabun','Leelawadee UI','Tahoma',sans-serif !important; font-size: 13px !important; margin: 0 !important; padding: 16px !important; }
-  header, .sidebar, .toolbar, .export-group, .action-btns, #paginationBar, #toast, .modal-overlay, .realtime-badge { display: none !important; }
+  body { background: #ffffff !important; color: #000000 !important; font-family: 'Sarabun','Leelawadee UI','Tahoma',sans-serif !important; font-size: 14px !important; margin: 0 !important; padding: 20px !important; }
+  header, .sidebar, .toolbar, .export-group, .action-btns, #paginationBar, #toast, .modal-overlay, .realtime-badge, .stats-row, #printHeader, .table-header { display: none !important; }
   .container { display: block !important; padding: 0 !important; }
-  .main { gap: 10px !important; }
+  .main { display: block !important; }
 
-  /* ── Print Header ── */
-  #printHeader { display: block !important; background: #1a6fd4 !important; border-radius: 10px !important; padding: 18px 22px !important; margin-bottom: 14px !important; }
-  #printBrand { color: rgba(255,255,255,.7) !important; font-size: 11px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important; margin-bottom: 4px !important; }
-  #printTitle { display: block !important; color: #fff !important; font-size: 20px !important; font-weight: 700 !important; margin-bottom: 3px !important; }
-  #printSubtitle { display: block !important; color: rgba(255,255,255,.75) !important; font-size: 12px !important; margin-bottom: 0 !important; }
-  #printDivider { display: none !important; }
+  /* ── Clean Document Table ── */
+  .report-table-wrap { background: transparent !important; border: none !important; box-shadow: none !important; overflow: visible !important; }
+  table { width: 100% !important; border-collapse: collapse !important; border: none !important; }
+  
+  /* Hide Status, Time, and Management columns */
+  th:nth-child(4), td:nth-child(4),
+  th:nth-child(5), td:nth-child(5),
+  th:nth-child(6), td:nth-child(6) {
+    display: none !important;
+  }
 
-  /* ── Stats Row ── */
-  .stats-row { display: grid !important; grid-template-columns: repeat(4,1fr) !important; gap: 8px !important; margin-bottom: 10px !important; }
-  .stat-card { background: #fff !important; border: 1px solid #c2d4ee !important; border-radius: 8px !important; padding: 12px 14px !important; }
-  .stat-label { color: #4a6080 !important; font-size: 10px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .5px !important; margin-bottom: 4px !important; }
-  .stat-value { font-size: 24px !important; font-weight: 700 !important; }
-  .stat-value.blue { color: #1a6fd4 !important; }
-  .stat-value.green { color: #0ea86a !important; }
-  .stat-value.purple { color: #6b4fbb !important; }
+  th { 
+    background: transparent !important; 
+    color: #000000 !important; 
+    padding: 10px 14px 10px 0 !important; 
+    font-size: 14px !important; 
+    font-weight: 700 !important; 
+    text-transform: none !important; 
+    letter-spacing: normal !important; 
+    text-align: left !important; 
+    border: none !important;
+    border-bottom: 2px solid #000000 !important;
+  }
+  
+  th .sort-icon { display: none !important; }
 
-  /* ── Table ── */
-  .report-table-wrap { background: #fff !important; border: 1px solid #c2d4ee !important; border-radius: 10px !important; overflow: visible !important; }
-  .table-header { background: #fff !important; border-bottom: 1px solid #c2d4ee !important; padding: 10px 14px !important; }
-  .table-title { color: #4a6080 !important; font-size: 11px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .5px !important; }
-  table { width: 100% !important; border-collapse: collapse !important; }
-  th { background: #1a6fd4 !important; color: #fff !important; padding: 10px 12px !important; font-size: 11px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .5px !important; text-align: left !important; }
-  td { padding: 10px 12px !important; border-bottom: 1px solid #e8f0fb !important; color: #0d1f3c !important; font-size: 13px !important; vertical-align: middle !important; }
-  tr:last-child td { border-bottom: none !important; }
-  tr:nth-child(even) td { background: #f7faff !important; }
+  td { 
+    padding: 8px 14px 8px 0 !important; 
+    border: none !important; 
+    color: #000000 !important; 
+    font-size: 13.5px !important; 
+    vertical-align: top !important; 
+    background: transparent !important;
+  }
+  
+  tr { background: transparent !important; }
+  tr:hover td { background: transparent !important; }
 
-  /* ── Tags ── */
-  .dept-tag { padding: 3px 8px !important; border-radius: 4px !important; font-size: 11px !important; font-weight: 700 !important; }
-  .dept-tag.hr { background: rgba(56,139,253,.15) !important; color: #1a6fd4 !important; border: 1px solid rgba(56,139,253,.3) !important; }
-  .dept-tag.it { background: rgba(63,185,80,.15) !important; color: #0a7a4e !important; border: 1px solid rgba(63,185,80,.3) !important; }
-  .dept-tag.ia { background: rgba(107,79,187,.15) !important; color: #6b4fbb !important; border: 1px solid rgba(107,79,187,.3) !important; }
-  .status-tag { font-size: 11px !important; padding: 2px 8px !important; border-radius: 10px !important; }
-  .status-tag.s1 { background: rgba(14,168,106,.12) !important; color: #0a7a4e !important; border: 1px solid rgba(14,168,106,.35) !important; }
-  .status-tag.s2 { background: rgba(26,111,212,.12) !important; color: #1a6fd4 !important; border: 1px solid rgba(26,111,212,.35) !important; }
-  .status-tag.s3 { background: rgba(224,92,58,.12) !important; color: #c0401a !important; border: 1px solid rgba(224,92,58,.35) !important; }
-  .latest-badge { background: rgba(14,168,106,.15) !important; color: #0a7a4e !important; border: 1px solid rgba(14,168,106,.3) !important; font-size: 10px !important; }
-  .topic-text { color: #0d1f3c !important; font-weight: 500 !important; font-size: 13px !important; }
-  .time-text { color: #4a6080 !important; font-size: 12px !important; }
+  .topic-text { 
+    color: #000000 !important; 
+    font-weight: normal !important; 
+    font-size: 13.5px !important; 
+    white-space: normal !important; 
+    overflow: visible !important; 
+    text-overflow: clip !important; 
+    max-width: none !important; 
+  }
+  
+  .result-text {
+    color: #000000 !important;
+    font-size: 13.5px !important;
+    margin-top: 2px !important;
+  }
 }
 #printHeader { display: none; }
 #printTitle { display: none; font-size: 20px; font-weight: 700; }
@@ -614,51 +956,65 @@ tr:hover td{background:var(--surface2)}
 <div class="modal-overlay hidden" id="reportModal">
   <div class="modal" style="width:580px;max-width:100%">
     <h2>✏️ บันทึกผลงานประจำวัน</h2>
-    <p style="margin-bottom:16px">กรอกข้อมูลและเพิ่มรายการงานได้หลายหัวข้อ</p>
+    <p style="margin-bottom:18px">กรอกข้อมูลและเพิ่มรายการงานได้หลายหัวข้อ</p>
 
-    <!-- Step 1: dept + name -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-      <div>
-        <label>ฝ่าย</label>
-        <select id="dept" onchange="updateNames()" style="margin-bottom:0">
-          <option value="">— เลือกฝ่าย —</option>
-          <option value="HR">HR</option>
-          <option value="IT">IT</option>
-          <option value="IA">IA</option>
-        </select>
+    <!-- Step 1: Profile Info Card -->
+    <div class="modal-section-card">
+      <div class="modal-step-title">
+        <span class="modal-step-badge">ขั้นตอนที่ 1</span>
+        <span>ข้อมูลผู้บันทึก</span>
       </div>
-      <div>
-        <label>ชื่อ-นามสกุล</label>
-        <select id="name" style="margin-bottom:0"><option value="">— เลือกฝ่ายก่อน —</option></select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label>ฝ่าย</label>
+          <select id="dept" onchange="updateNames()" style="margin-bottom:0">
+            <option value="">— เลือกฝ่าย —</option>
+            <option value="HR">HR</option>
+            <option value="IT">IT</option>
+            <option value="IA">IA</option>
+          </select>
+        </div>
+        <div>
+          <label>ชื่อ-นามสกุล</label>
+          <select id="name" style="margin-bottom:0"><option value="">— เลือกฝ่ายก่อน —</option></select>
+        </div>
       </div>
     </div>
 
-    <!-- Step 2: status default -->
-    <label>สถานะเริ่มต้น (ใช้กับทุกรายการ)</label>
-    <div class="status-picker" id="statusPicker" style="margin-bottom:18px">
-      <button type="button" class="status-btn active" data-val="สำเร็จ" onclick="pickStatus(this)">✅ สำเร็จ</button>
-      <button type="button" class="status-btn" data-val="รอดำเนินการ" onclick="pickStatus(this)">⏳ รอดำเนินการ</button>
-      <button type="button" class="status-btn" data-val="ไม่สำเร็จ" onclick="pickStatus(this)">❌ ไม่สำเร็จ</button>
-    </div>
+    <!-- Step 2: Work Items List Card -->
+    <div class="modal-section-card" style="margin-bottom:20px">
+      <div class="modal-step-title">
+        <span class="modal-step-badge" style="background:var(--accent2)">ขั้นตอนที่ 2</span>
+        <span>รายละเอียดงานประจำวัน</span>
+      </div>
 
-    <!-- Step 3: topic list -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <label style="margin:0">รายการงานประจำวัน</label>
-      <span id="topicCount" style="font-size:12px;font-family:var(--mono);color:var(--text3)">0 รายการ</span>
+      <label>สถานะของรายการที่จะเพิ่ม</label>
+      <div class="status-picker" id="statusPicker" style="margin-bottom:16px">
+        <button type="button" class="status-btn active" data-val="สำเร็จ" onclick="pickStatus(this)">✅ สำเร็จ</button>
+        <button type="button" class="status-btn" data-val="รอดำเนินการ" onclick="pickStatus(this)">⏳ รอดำเนินการ</button>
+        <button type="button" class="status-btn" data-val="ไม่สำเร็จ" onclick="pickStatus(this)">❌ ไม่สำเร็จ</button>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <label style="margin:0">รายการที่เพิ่มไว้แล้ว</label>
+        <span id="topicCount" style="font-size:12px;font-family:var(--mono);color:var(--text3);font-weight:700">0 รายการ</span>
+      </div>
+      
+      <div id="topicList" style="display:flex;flex-direction:column;gap:6px;min-height:40px;margin-bottom:14px"></div>
+
+      <label for="topicInput">พิมพ์หัวข้องานแล้วกดปุ่มเพิ่ม</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="topicInput" placeholder="เช่น Morning Talk, สรรหาพนักงานใหม่..."
+          style="margin:0;flex:1;font-size:14px"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addTopic()}" />
+        <button class="btn btn-success" onclick="addTopic()" style="white-space:nowrap;padding:10px 18px;border-radius:10px;height:44px;display:flex;align-items:center;justify-content:center">+ เพิ่ม</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--text3);margin-top:6px">💡 สามารถพิมพ์แล้วกด Enter หรือกดปุ่ม <b>+ เพิ่ม</b> ได้เลย</div>
     </div>
-    <div id="topicList" style="display:flex;flex-direction:column;gap:8px;min-height:40px;margin-bottom:12px"></div>
-    <!-- Add topic row -->
-    <div style="display:flex;gap:8px;align-items:center">
-      <input type="text" id="topicInput" placeholder="หัวข้อการดำเนินงาน เช่น Morning Talk, สรรหาพนักงาน"
-        style="margin:0;flex:1;font-size:14px"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();addTopic()}" />
-      <button class="btn btn-success btn-sm" onclick="addTopic()" style="white-space:nowrap;padding:9px 14px">+ เพิ่ม</button>
-    </div>
-    <div style="font-size:11.5px;color:var(--text3);margin-top:6px;margin-bottom:4px">กด Enter หรือปุ่ม + เพิ่มรายการ</div>
 
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeReportModal()">ยกเลิก</button>
-      <button class="btn btn-primary" style="width:auto;min-width:160px" onclick="submitAllTopics()" id="submitBtn">
+      <button class="btn btn-primary" style="width:auto;min-width:180px;height:44px" onclick="submitAllTopics()" id="submitBtn">
         💾 บันทึกทั้งหมด
       </button>
     </div>
@@ -923,76 +1279,62 @@ tr:hover td{background:var(--surface2)}
     <div style="height:1px;background:var(--border);margin:16px 0"></div>
 
     <!-- Quick shortcuts -->
-    <label style="margin-bottom:10px">⚡ เลือก AI</label>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
-      <button onclick="setAiLink('https://gemini.google.com/app','gemini')"
-        id="aibtn-gemini"
-        style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);transition:all .18s;text-align:left"
-        onmouseover="this.style.borderColor='#4285f4';this.style.background='rgba(66,133,244,.06)'"
-        onmouseout="this.style.borderColor=this.classList.contains('ai-selected')?'#4285f4':'var(--border)';this.style.background=this.classList.contains('ai-selected')?'rgba(66,133,244,.08)':'var(--bg)'">
-        <span style="font-size:22px">🔵</span>
-        <div><div style="font-weight:700">Gemini</div><div style="font-size:11px;color:var(--text3)">Copy &amp; เปิด</div></div>
-      </button>
-      <button onclick="setAiLink('https://chatgpt.com','chatgpt')"
-        id="aibtn-chatgpt"
-        style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);transition:all .18s;text-align:left"
-        onmouseover="this.style.borderColor='#10a37f';this.style.background='rgba(16,163,127,.06)'"
-        onmouseout="this.style.borderColor=this.classList.contains('ai-selected')?'#10a37f':'var(--border)';this.style.background=this.classList.contains('ai-selected')?'rgba(16,163,127,.08)':'var(--bg)'">
-        <span style="font-size:22px">🟢</span>
-        <div><div style="font-weight:700">ChatGPT</div><div style="font-size:11px;color:var(--text3)">ส่ง ?q= อัตโนมัติ</div></div>
-      </button>
-      <button onclick="setAiLink('https://claude.ai','claude')"
-        id="aibtn-claude"
-        style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);transition:all .18s;text-align:left"
-        onmouseover="this.style.borderColor='#cc785c';this.style.background='rgba(204,120,92,.06)'"
-        onmouseout="this.style.borderColor=this.classList.contains('ai-selected')?'#cc785c':'var(--border)';this.style.background=this.classList.contains('ai-selected')?'rgba(204,120,92,.08)':'var(--bg)'">
-        <span style="font-size:22px">🟠</span>
-        <div><div style="font-weight:700">Claude</div><div style="font-size:11px;color:var(--text3)">ส่ง ?q= อัตโนมัติ</div></div>
-      </button>
-      <button onclick="setAiLink('https://copilot.microsoft.com','copilot')"
-        id="aibtn-copilot"
-        style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);transition:all .18s;text-align:left"
-        onmouseover="this.style.borderColor='#0078d4';this.style.background='rgba(0,120,212,.06)'"
-        onmouseout="this.style.borderColor=this.classList.contains('ai-selected')?'#0078d4':'var(--border)';this.style.background=this.classList.contains('ai-selected')?'rgba(0,120,212,.08)':'var(--bg)'">
-        <span style="font-size:22px">🔷</span>
-        <div><div style="font-weight:700">Copilot</div><div style="font-size:11px;color:var(--text3)">ส่ง ?q= อัตโนมัติ</div></div>
+    <label style="margin-bottom:10px">⚡ แพลตฟอร์ม AI</label>
+    <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px">
+      <button onclick="setAiLink('https://notebooklm.google.com','notebooklm')"
+        id="aibtn-notebooklm"
+        style="display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);cursor:pointer;font-family:var(--font);font-size:14px;font-weight:700;color:var(--text);transition:all .18s;text-align:left"
+        onmouseover="this.style.borderColor='#8b5cf6';this.style.background='rgba(139,92,246,.06)'"
+        onmouseout="this.style.borderColor=this.classList.contains('ai-selected')?'#8b5cf6':'var(--border)';this.style.background=this.classList.contains('ai-selected')?'rgba(139,92,246,.08)':'var(--bg)'">
+        <span style="font-size:24px">📔</span>
+        <div style="text-align:center"><div style="font-weight:800;font-size:15px">Google NotebookLM</div><div style="font-size:12px;color:var(--text3);font-weight:500;margin-top:1px">ส่งออกข้อมูล สรุป &amp; ทำสไลด์นำเสนอ</div></div>
       </button>
     </div>
 
     <!-- Custom Link -->
-    <label for="aiLinkInput" style="margin-bottom:8px">🔗 หรือใส่ลิงก์เอง</label>
+    <label for="aiLinkInput" style="margin-bottom:8px">🔗 หรือใส่ลิงก์ห้องทำงาน AI (เช่น ลิงก์ Notebook คัดลอกจากเบราว์เซอร์)</label>
     <input type="text" id="aiLinkInput"
-      placeholder="https://..."
+      placeholder="https://notebooklm.google.com/notebook/..."
       style="margin-bottom:4px;font-size:14px"
       oninput="onAiLinkInput()" />
     <div id="aiLinkHint" style="font-size:11.5px;color:var(--text3);margin-bottom:14px">
-      AI ที่รองรับ ?q= จะส่งข้อความอัตโนมัติ ส่วน Gemini จะ copy ไว้ในคลิปบอร์ดให้วางเอง
+      สามารถคัดลอก URL ของ Notebook ห้องทำงานของคุณมาใส่ช่องนี้เพื่อเปิดตรงได้เลย
     </div>
 
-    <!-- Excel Download Today -->
-    <label style="margin-bottom:8px">&#x1F4E5; ดาวน์โหลดข้อมูลสำหรับส่ง AI</label>
-    <button onclick="exportExcelToday()"
-      style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-radius:10px;border:1.5px solid rgba(14,168,106,.35);background:linear-gradient(135deg,rgba(14,168,106,.06) 0%,rgba(10,138,88,.04) 100%);cursor:pointer;font-family:var(--font);transition:all .2s;margin-bottom:14px"
-      onmouseover="this.style.borderColor='#0ea86a';this.style.background='linear-gradient(135deg,rgba(14,168,106,.12) 0%,rgba(10,138,88,.08) 100%)';this.style.transform='translateY(-1px)'"
-      onmouseout="this.style.borderColor='rgba(14,168,106,.35)';this.style.background='linear-gradient(135deg,rgba(14,168,106,.06) 0%,rgba(10,138,88,.04) 100%)';this.style.transform=''">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#0ea86a,#0a7a4e);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">&#x1F4CA;</div>
+    <!-- Data Download Section -->
+    <label style="margin-bottom:8px">📂 ดาวน์โหลดไฟล์ข้อมูลสรุปสำหรับส่งให้ NotebookLM / AI</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <!-- Excel -->
+      <button onclick="exportExcelToday()"
+        style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(14,168,106,.35);background:linear-gradient(135deg,rgba(14,168,106,.06) 0%,rgba(10,138,88,.04) 100%);cursor:pointer;font-family:var(--font);transition:all .2s"
+        onmouseover="this.style.borderColor='#0ea86a';this.style.background='linear-gradient(135deg,rgba(14,168,106,.12) 0%,rgba(10,138,88,.08) 100%)';this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.borderColor='rgba(14,168,106,.35)';this.style.background='linear-gradient(135deg,rgba(14,168,106,.06) 0%,rgba(10,138,88,.04) 100%)';this.style.transform=''">
+        <div style="width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,#0ea86a,#0a7a4e);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📊</div>
         <div style="text-align:left">
-          <div style="font-size:14px;font-weight:700;color:var(--accent2)">ดาวน์โหลด Excel วันนี้</div>
-          <div id="aiExcelTodayCount" style="font-size:11.5px;color:var(--text2);margin-top:1px">กำลังนับรายการ&#x2026;</div>
+          <div style="font-size:12px;font-weight:700;color:var(--accent2)">Excel วันนี้</div>
+          <div style="font-size:10px;color:var(--text3)">.xlsx ดึงง่าย</div>
         </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;background:rgba(14,168,106,.12);border:1px solid rgba(14,168,106,.3)">
-        <span style="font-size:13px">&#x2B07;&#xFE0F;</span>
-        <span style="font-size:12.5px;font-weight:700;color:var(--accent2)">.xlsx</span>
-      </div>
-    </button>
+      </button>
+      
+      <!-- PDF -->
+      <button onclick="exportPDF()"
+        style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1.5px solid rgba(220,76,39,.35);background:linear-gradient(135deg,rgba(220,76,39,.06) 0%,rgba(180,50,20,.04) 100%);cursor:pointer;font-family:var(--font);transition:all .2s"
+        onmouseover="this.style.borderColor='#dc4c27';this.style.background='linear-gradient(135deg,rgba(220,76,39,.12) 0%,rgba(180,50,20,.08) 100%)';this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.borderColor='rgba(220,76,39,.35)';this.style.background='linear-gradient(135deg,rgba(220,76,39,.06) 0%,rgba(180,50,20,.04) 100%)';this.style.transform=''">
+        <div style="width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,#dc4c27,#ba3212);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">📄</div>
+        <div style="text-align:left">
+          <div style="font-size:12px;font-weight:700;color:var(--accent3)">PDF รายงาน</div>
+          <div style="font-size:10px;color:var(--text3)">.pdf ทำสไลด์ดี</div>
+        </div>
+      </button>
+    </div>
+    <div id="aiExcelTodayCount" style="font-size:11.5px;color:var(--text2);margin-bottom:14px;background:var(--surface2);padding:6px 12px;border-radius:6px;border:1px solid var(--border)">กำลังนับรายการ...</div>
 
     <!-- Prompt Preview -->
-    <label style="margin-bottom:8px">&#x1F4CB; ข้อความที่จะส่งให้ AI</label>
+    <label style="margin-bottom:8px">&#x1F4CB; ข้อความคำสั่ง (Prompt) นำไปใส่ใน NotebookLM สตูดิโอ</label>
     <div style="position:relative">
       <textarea id="aiPromptPreview" rows="4"
-        style="width:100%;font-size:13px;line-height:1.7;background:rgba(107,79,187,.04);border:1.5px solid rgba(107,79,187,.2);border-radius:var(--radius-sm);padding:12px 52px 12px 12px;color:var(--text);font-family:var(--font);resize:vertical;margin-bottom:4px;outline:none;font-weight:500">ทำ Report วิเคราะห์และแปลงเป็นไฟล์ PDF พร้อมตกแต่งให้ดูดี</textarea>
+        style="width:100%;font-size:13px;line-height:1.7;background:rgba(107,79,187,.04);border:1.5px solid rgba(107,79,187,.2);border-radius:var(--radius-sm);padding:12px 52px 12px 12px;color:var(--text);font-family:var(--font);resize:vertical;margin-bottom:4px;outline:none;font-weight:500">วิเคราะห์ข้อมูลสรุปการทำงานโดยแยกเป็นแผนกๆอย่างชัดเจนข้อมูลครบทุกคน และข้อมูลดิบ ไม่เกิน 5 หน้า อ่านง่าย สบายตา คนหยุดหรือสายใส่ไปด้วย</textarea>
       <button onclick="copyAiPrompt()" id="copyPromptBtn"
         style="position:absolute;top:8px;right:8px;padding:4px 10px;border-radius:5px;border:1px solid rgba(107,79,187,.3);background:rgba(107,79,187,.08);color:var(--accent4);font-family:var(--font);font-size:11.5px;font-weight:700;cursor:pointer;transition:all .15s"
         onmouseover="this.style.background='rgba(107,79,187,.18)'" onmouseout="this.style.background='rgba(107,79,187,.08)'">
@@ -1000,7 +1342,14 @@ tr:hover td{background:var(--surface2)}
       </button>
     </div>
     <div id="aiGeminiNote" style="display:none;font-size:11.5px;color:var(--text2);background:rgba(255,200,0,.08);border:1px solid rgba(255,200,0,.25);border-radius:6px;padding:7px 12px;margin-bottom:12px">
-      &#x26A0;&#xFE0F; <strong>Gemini</strong> ไม่รองรับการส่ง URL parameter &#x2014; ระบบจะ <strong>copy ข้อความไว้ในคลิปบอร์ด</strong> ให้อัตโนมัติ แล้วค่อยวาง (Ctrl+V) ในช่อง Gemini
+      ⚠️ <strong>Gemini</strong> ไม่รองรับการส่ง URL parameter — ระบบจะ <strong>copy ข้อความไว้ในคลิปบอร์ด</strong> ให้อัตโนมัติ แล้วค่อยวาง (Ctrl+V) ในช่อง Gemini
+    </div>
+    <div id="aiNotebookLMNote" style="display:none;font-size:11.5px;color:var(--text2);background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:6px;padding:7px 12px;margin-bottom:12px">
+      💡 <strong>วิธีใช้สำหรับ NotebookLM</strong>:<br>
+      1. ดาวน์โหลดไฟล์ <strong>PDF รายงาน</strong> ด้านบนเก็บไว้<br>
+      2. กดปุ่มสีม่วง <strong>"เปิด NotebookLM"</strong> ด้านล่างเพื่อเข้าห้องทำงานของคุณ<br>
+      3. อัปโหลดไฟล์ PDF เข้าไปที่คอลัมน์แหล่งข้อมูล (Sources) ฝั่งซ้าย<br>
+      4. กดปุ่ม <strong>📋 Copy</strong> ฝั่งขวาของช่องคำสั่ง แล้วนำไปวางในช่อง <strong>"ปรับแต่งชุดสไลด์"</strong> ฝั่งขวาของ NotebookLM เพื่อสร้างสไลด์ได้ทันที!
     </div>
     <div style="height:1px;background:var(--border);margin:12px 0 14px"></div>
 
@@ -1243,9 +1592,12 @@ function renderTopicList(){
     return;
   }
   list.innerHTML = _topics.map(function(t, i){
+    var stCls = t.status === 'สำเร็จ' ? 's1' : (t.status === 'รอดำเนินการ' ? 's2' : 's3');
+    var badgeText = t.status === 'สำเร็จ' ? '✅ สำเร็จ' : (t.status === 'รอดำเนินการ' ? '⏳ รอดำเนินการ' : '❌ ไม่สำเร็จ');
     return '<div class="topic-item">'
       + '<div class="topic-num">' + (i+1) + '</div>'
       + '<div class="topic-text-label">' + esc(t.text) + '</div>'
+      + '<div class="topic-status-inline status-tag ' + stCls + '">' + badgeText + '</div>'
       + '<button class="topic-remove" onclick="removeTopic(' + i + ')" title="ลบ">×</button>'
       + '</div>';
   }).join('');
@@ -1762,19 +2114,22 @@ function exportExcelToday(){
 }
 function openAIModal(){
   document.getElementById('aiModal').classList.remove('hidden');
-  var saved = localStorage.getItem('ai_link')||'';
-  var savedType = localStorage.getItem('ai_type')||'';
+  var saved = localStorage.getItem('ai_link')||'https://notebooklm.google.com';
+  var savedType = localStorage.getItem('ai_type')||'notebooklm';
   document.getElementById('aiLinkInput').value = saved;
   currentAiType = savedType;
-  ['gemini','chatgpt','claude','copilot'].forEach(function(t){
-    var b = document.getElementById('aibtn-'+t);
-    if(b) b.classList.remove('ai-selected');
-  });
-  if(savedType){
-    var sb = document.getElementById('aibtn-'+savedType);
+  
+  var b = document.getElementById('aibtn-notebooklm');
+  if(b) b.classList.remove('ai-selected');
+  
+  if(savedType === 'notebooklm'){
+    var sb = document.getElementById('aibtn-notebooklm');
     if(sb) sb.classList.add('ai-selected');
   }
   updateAiBtn(saved);
+  // Default to notebooklm view
+  setAiLink(saved, savedType);
+
   // update today count label
   var todayCount = getTodayReports().length;
   var countEl = document.getElementById('aiExcelTodayCount');
@@ -1791,25 +2146,26 @@ function setAiLink(url, type){
   localStorage.setItem('ai_type', type||'');
   currentAiType = type||'';
   // update button highlights
-  ['gemini','chatgpt','claude','copilot'].forEach(function(t){
-    var b = document.getElementById('aibtn-'+t);
-    if(!b) return;
+  var b = document.getElementById('aibtn-notebooklm');
+  if(b) {
     b.classList.remove('ai-selected');
     b.style.borderColor = 'var(--border)';
     b.style.background = 'var(--bg)';
-  });
-  var colors = {gemini:'#4285f4',chatgpt:'#10a37f',claude:'#cc785c',copilot:'#0078d4'};
-  var bgColors = {gemini:'rgba(66,133,244,.08)',chatgpt:'rgba(16,163,127,.08)',claude:'rgba(204,120,92,.08)',copilot:'rgba(0,120,212,.08)'};
-  if(type){
-    var btn = document.getElementById('aibtn-'+type);
+  }
+  
+  if(type === 'notebooklm'){
+    var btn = document.getElementById('aibtn-notebooklm');
     if(btn){
       btn.classList.add('ai-selected');
-      btn.style.borderColor = colors[type]||'var(--accent)';
-      btn.style.background = bgColors[type]||'rgba(26,111,212,.06)';
+      btn.style.borderColor = '#8b5cf6';
+      btn.style.background = 'rgba(139,92,246,.08)';
     }
   }
-  // show/hide gemini note
-  document.getElementById('aiGeminiNote').style.display = (type==='gemini') ? 'block' : 'none';
+  // show/hide notebooklm note
+  document.getElementById('aiNotebookLMNote').style.display = (type==='notebooklm') ? 'block' : 'none';
+  
+  var previewArea = document.getElementById('aiPromptPreview');
+  previewArea.value = 'วิเคราะห์ข้อมูลสรุปการทำงานโดยแยกเป็นแผนกๆอย่างชัดเจนข้อมูลครบทุกคน และข้อมูลดิบ ไม่เกิน 5 หน้า อ่านง่าย สบายตา คนหยุดหรือสายใส่ไปด้วย';
   updateAiBtn(url);
 }
 function onAiLinkInput(){
@@ -1817,11 +2173,9 @@ function onAiLinkInput(){
   localStorage.setItem('ai_link', url);
   currentAiType = '';
   localStorage.setItem('ai_type','');
-  ['gemini','chatgpt','claude','copilot'].forEach(function(t){
-    var b = document.getElementById('aibtn-'+t);
-    if(b){ b.classList.remove('ai-selected'); b.style.borderColor='var(--border)'; b.style.background='var(--bg)'; }
-  });
-  document.getElementById('aiGeminiNote').style.display = 'none';
+  var b = document.getElementById('aibtn-notebooklm');
+  if(b){ b.classList.remove('ai-selected'); b.style.borderColor='var(--border)'; b.style.background='var(--bg)'; }
+  document.getElementById('aiNotebookLMNote').style.display = 'none';
   updateAiBtn(url);
 }
 function updateAiBtn(url){
@@ -1848,38 +2202,17 @@ function openAiLink(){
   var url = document.getElementById('aiLinkInput').value.trim();
   if(!url){ showToast('กรุณาใส่ลิงก์ก่อน','error'); return; }
   var prompt = document.getElementById('aiPromptPreview').value.trim();
-  var finalUrl = url;
+  
+  // NotebookLM ไม่รองรับ URL query parameters - copy ไปยังคลิปบอร์ดแทนเพื่อความสะดวก
+  navigator.clipboard.writeText(prompt).then(function(){
+    showToast('📋 Copy prompt สำเร็จ — วางใน NotebookLM ได้เลย','success');
+  }).catch(function(){
+    try{ document.getElementById('aiPromptPreview').select(); document.execCommand('copy'); }catch(e){}
+  });
 
-  // AI ที่รองรับ ?q= parameter
-  var qSupported = ['chatgpt','claude','copilot'];
-  var urlMap = {
-    chatgpt: 'https://chatgpt.com',
-    claude:  'https://claude.ai/new',
-    copilot: 'https://copilot.microsoft.com'
-  };
-
-  if(currentAiType && qSupported.indexOf(currentAiType) !== -1){
-    var base = urlMap[currentAiType] || url;
-    finalUrl = base + '?q=' + encodeURIComponent(prompt);
-  } else if(currentAiType === 'gemini'){
-    // Gemini ไม่รองรับ ?q= — copy clipboard แทน
-    navigator.clipboard.writeText(prompt).then(function(){
-      showToast('📋 Copy prompt แล้ว — วางใน Gemini ได้เลย','success');
-    }).catch(function(){
-      try{ document.getElementById('aiPromptPreview').select(); document.execCommand('copy'); showToast('📋 Copy prompt แล้ว','success'); }catch(e){}
-    });
-  } else if(prompt){
-    // custom URL — ลอง append ?q=
-    try{
-      var u = new URL(url);
-      u.searchParams.set('q', prompt);
-      finalUrl = u.toString();
-    }catch(e){ finalUrl = url; }
-  }
-
-  window.open(finalUrl, '_blank');
+  window.open(url, '_blank');
   closeAIModal();
-  showToast('🚀 เปิด AI พร้อมข้อมูลแล้ว','success');
+  showToast('🚀 เปิด NotebookLM เรียบร้อย','success');
 }
 
 // ════════════════════════════════════════════
