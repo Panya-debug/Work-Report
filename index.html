@@ -950,6 +950,7 @@ tr:hover td{background:var(--surface2)}
     <label>Admin Secret <span style="color:var(--accent3)">(เฉพาะ Dev — อย่าใช้ใน Production)</span></label>
     <input type="password" id="cfgSecret" placeholder="nhost-admin-secret" />
     <div class="modal-footer">
+      <button class="btn btn-danger" style="margin-right:auto; padding:8px 12px; font-size:12px; border-radius:8px" onclick="resetConfigToDefault()">ค่าเริ่มต้น</button>
       <button class="btn-ghost" onclick="closeConfig()">ยกเลิก</button>
       <button class="btn btn-primary" style="width:auto" onclick="saveConfig()">💾 บันทึก</button>
     </div>
@@ -1434,6 +1435,17 @@ function saveConfig(){
   loadReports();
   refreshTimer=setInterval(loadReports,15000);
 }
+function resetConfigToDefault(){
+  if(!confirm('ต้องการรีเซ็ตการตั้งค่าเชื่อมต่อ Nhost กลับเป็นค่าเริ่มต้นใช่หรือไม่?')) return;
+  localStorage.setItem('nhost_subdomain', DEFAULT_CONFIG.subdomain);
+  localStorage.setItem('nhost_region', DEFAULT_CONFIG.region);
+  localStorage.setItem('nhost_secret', DEFAULT_CONFIG.secret);
+  closeConfig();
+  showToast('✅ รีเซ็ตค่าเริ่มต้นแล้ว','success');
+  clearInterval(refreshTimer);
+  loadReports();
+  refreshTimer=setInterval(loadReports,15000);
+}
 
 // ════════════════════════════════════════════
 //  MEMBERS — เก็บใน Nhost (work_members table)
@@ -1611,7 +1623,9 @@ function readCurrentDraft(){
   return {
     topics: _topics.slice(),
     status: getPickedStatus('statusPicker'),
-    input: document.getElementById('topicInput').value
+    input: document.getElementById('topicInput').value,
+    // FIXED: แนบ Timestamp เพื่อรองรับการเปรียบเทียบข้อมูลแบบร่างข้ามเครื่อง (Timestamp-based Syncing)
+    updated_at: new Date().toISOString()
   };
 }
 // ใช้ draft โหลดเข้าฟอร์ม
@@ -1654,7 +1668,7 @@ async function syncDraftToNhost(){
   var dept = parts[0], name = decodeURIComponent(parts[1]||'');
   if(!dept || !name) return;
   var draft = readCurrentDraft();
-  var MUT = `mutation UpsertDraft($key:String!,$dept:String!,$name:String!,$payload:json!){
+  var MUT = `mutation UpsertDraft($key:String!,$dept:String!,$name:String!,$payload:jsonb!){
     insert_work_drafts_one(object:{draft_key:$key,dept:$dept,name:$name,payload:$payload}
       on_conflict:{constraint:work_drafts_draft_key_key,update_columns:[payload,dept,name,updated_at]}){
       draft_key updated_at
@@ -1663,10 +1677,8 @@ async function syncDraftToNhost(){
   try{
     await gql(MUT,{key:_draftCurrentKey,dept:dept,name:name,payload:draft});
   }catch(e){
-    // ไม่มีตาราง work_drafts หรือยังไม่ได้สร้าง → ไม่เป็นไร ยังมี localStorage อยู่
-    if(String(e.message).indexOf('work_drafts') === -1 && String(e.message).toLowerCase().indexOf('does not exist') === -1){
-      console.warn('draft sync failed:', e.message);
-    }
+    console.error('draft sync failed:', e.message);
+    showToast('ซิงค์ข้อมูลลงเซิร์ฟเวอร์ไม่ได้: ' + e.message, 'error');
   }
 }
 // ดึง draft จาก Nhost สำหรับ dept/name นี้
@@ -1725,7 +1737,28 @@ async function loadDraftForCurrentUser(){
   var remote = await fetchDraftFromNhost(dept,name);
   if(remote){
     var remoteHas = remote.topics && remote.topics.length || (remote.input && remote.input.trim());
-    if(remoteHas && !local){
+    var localHas = local && (local.topics && local.topics.length || (local.input && local.input.trim()));
+    
+    // FIXED: ใช้การเปรียบเทียบ Timestamp เพื่อตรวจสอบข้อมูลล่าสุด
+    var shouldLoadRemote = false;
+    if(remoteHas){
+      if(!localHas){
+        // เคสที่ 1: เครื่องนี้ไม่มีข้อมูลร่างของคนนี้มาก่อน -> โหลดของรีโมต
+        shouldLoadRemote = true;
+      } else if(remote.updated_at && local.updated_at){
+        // เคสที่ 2: ทั้งคู่มีข้อมูลค้างอยู่ -> เทียบความใหม่ของเวลาเซฟล่าสุด
+        var remoteTime = new Date(remote.updated_at).getTime();
+        var localTime = new Date(local.updated_at).getTime();
+        if(remoteTime > localTime){
+          shouldLoadRemote = true;
+        }
+      } else {
+        // เคสที่ 3: ตรวจไม่พบ Timestamp ดั้งเดิมในฝั่ง Local (เช่น โค้ดรุ่นเก่า) -> ใช้ข้อมูลฝั่งรีโมต
+        shouldLoadRemote = true;
+      }
+    }
+    
+    if(shouldLoadRemote){
       applyDraft(remote);
       lsSetDraft(key, remote);
       showDraftSavedHint();
