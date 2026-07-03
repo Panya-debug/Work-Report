@@ -1715,6 +1715,16 @@ function persistCurrentDraftIfAny(){
   }
 }
 
+// ตรวจสอบว่าแบบร่างเป็นของวันเก่าหรือไม่ (เพื่อเคลียร์ข้อมูลเริ่มวันใหม่)
+function isOldDraft(draft){
+  if(!draft) return false;
+  // FIXED: หากไม่มี updated_at (เป็นร่างจากโค้ดเวอร์ชันเก่า) ให้ถือว่าเป็นร่างเก่าและล้างข้อมูลทันที
+  if(!draft.updated_at) return true;
+  var draftDate = new Date(draft.updated_at).toDateString();
+  var todayDate = new Date().toDateString();
+  return draftDate !== todayDate;
+}
+
 // โหลด draft สำหรับคนที่เลือกอยู่ตอนนี้ (localStorage ก่อน, Nhost เสริม)
 async function loadDraftForCurrentUser(){
   var dept = document.getElementById('dept').value;
@@ -1723,6 +1733,11 @@ async function loadDraftForCurrentUser(){
     _draftCurrentKey = '_anon';
     // ถ้าเคยมี draft ก่อนเลือกฝ่าย/ชื่อ ให้เก็บไว้
     var anon = lsGetDraft('_anon');
+    // FIXED: ล้างแบบร่างของวันเก่าสำหรับคีย์ชั่วคราว
+    if(anon && isOldDraft(anon)){
+      lsClearDraft('_anon');
+      anon = null;
+    }
     applyDraft(anon);
     return;
   }
@@ -1731,10 +1746,21 @@ async function loadDraftForCurrentUser(){
   _draftCurrentKey = key;
   // 1) localStorage ก่อน (เร็ว)
   var local = lsGetDraft(key);
+  // FIXED: ล้างแบบร่างเก่าจากเมื่อวานเพื่อเริ่มวันใหม่
+  if(local && isOldDraft(local)){
+    lsClearDraft(key);
+    local = null;
+  }
   if(local){ applyDraft(local); showDraftSavedHint(); }
   else { applyDraft(null); }
   // 2) Nhost เสริม — ถ้ามีเวอร์ชันใหม่กว่าจากเครื่องอื่น ใช้ของนั้น
   var remote = await fetchDraftFromNhost(dept,name);
+  // FIXED: ล้างแบบร่างเก่าจากเมื่อวานบนระบบคลาวด์ Nhost
+  if(remote && isOldDraft(remote)){
+    gql(`mutation DeleteDraft($key:String!){delete_work_drafts_by_pk(draft_key:$key){draft_key}}`, {key:key})
+      .catch(function(){ /* หากตารางมีปัญหาให้ปล่อยผ่าน */ });
+    remote = null;
+  }
   if(remote){
     var remoteHas = remote.topics && remote.topics.length || (remote.input && remote.input.trim());
     var localHas = local && (local.topics && local.topics.length || (local.input && local.input.trim()));
