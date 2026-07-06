@@ -927,6 +927,19 @@ tr:hover td{background:var(--surface2)}
   border-radius:4px;transition:var(--transition);line-height:1;flex-shrink:0;
 }
 .topic-remove:hover{color:var(--accent3);background:rgba(224,92,58,.08)}
+
+/* ── Recent Task Label (ใส่จากงานเก่า) ── */
+.recent-task-label{
+  display:flex;align-items:center;gap:12px;
+  padding:8px 12px;border-radius:var(--radius-xs);
+  cursor:pointer;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  transition:all .15s ease;
+  user-select:none;
+}
+.recent-task-label:hover{background:var(--surface3);border-color:var(--border2)}
+.recent-task-label.selected{background:rgba(37,99,235,.05);border-color:rgba(37,99,235,.3)}
 </style>
 </head>
 <body>
@@ -1002,10 +1015,22 @@ tr:hover td{background:var(--surface2)}
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <label style="margin:0">รายการที่เพิ่มไว้แล้ว</label>
-        <span id="topicCount" style="font-size:12px;font-family:var(--mono);color:var(--text3);font-weight:700">0 รายการ</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="topicCount" style="font-size:12px;font-family:var(--mono);color:var(--text3);font-weight:700">0 รายการ</span>
+          <button type="button" id="recentTasksToggleBtn" onclick="toggleRecentTasksSection()" style="display:none;background:rgba(37,99,235,.08);color:var(--accent);border:1.5px solid rgba(37,99,235,.22);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:all .18s" onmouseover="this.style.background='rgba(37,99,235,.18)'" onmouseout="this.style.background='rgba(37,99,235,.08)'">📋 ใส่จากงานเก่า</button>
+        </div>
       </div>
       
       <div id="topicList" style="display:flex;flex-direction:column;gap:6px;min-height:40px;margin-bottom:14px"></div>
+
+      <!-- ส่วนประวัติงานเก่าเพื่อดึงข้อมูลมาใช้งานใหม่ -->
+      <div id="recentTasksSection" style="display:none;margin-bottom:14px;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:12.5px;font-weight:700;color:var(--text)"><i class="bi bi-clock-history"></i> เลือกจากงานล่าสุด 10 รายการ</span>
+          <button type="button" class="btn btn-success" style="padding:4px 10px;font-size:11.5px" onclick="addSelectedRecentTasks()">+ เพิ่มรายการที่เลือก</button>
+        </div>
+        <div id="recentTasksList" style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;padding-right:4px"></div>
+      </div>
 
       <label for="topicInput">พิมพ์หัวข้องานแล้วกดปุ่มเพิ่ม</label>
       <div style="display:flex;gap:8px;align-items:center">
@@ -1704,6 +1729,8 @@ function onDeptChange(){
 function onNameChange(){
   persistCurrentDraftIfAny();
   loadDraftForCurrentUser();
+  // โหลดงานล่าสุดของคนที่เลือกเพื่อใช้ในปุ่ม "ใส่จากงานเก่า"
+  loadRecentTasksForUser();
 }
 // เก็บ draft ปัจจุบัน (ถ้ามีข้อมูล) ก่อนจะสลับ
 function persistCurrentDraftIfAny(){
@@ -1823,6 +1850,130 @@ function openReportModal(){
 
 function closeReportModal(){
   document.getElementById('reportModal').classList.add('hidden');
+  // ซ่อน recent tasks section เมื่อปิด modal
+  var sec = document.getElementById('recentTasksSection');
+  if(sec) sec.style.display = 'none';
+  var btn = document.getElementById('recentTasksToggleBtn');
+  if(btn){ btn.style.display = 'none'; btn.textContent = '📋 ใส่จากงานเก่า'; }
+}
+
+// ═══════════════════════════════════════════
+//  RECENT TASKS PICKER
+//  ดึงงาน 10 รายการล่าสุดของคนที่เลือก
+//  เพื่อให้ติ๊กเลือกใส่ในรายการวันนี้ได้
+// ═══════════════════════════════════════════
+var _recentTasksForUser = []; // cache งานล่าสุดของคนที่เลือกอยู่
+
+async function loadRecentTasksForUser(){
+  var dept = document.getElementById('dept').value;
+  var name = document.getElementById('name').value;
+  var btn = document.getElementById('recentTasksToggleBtn');
+  if(!dept || !name){
+    if(btn) btn.style.display = 'none';
+    _recentTasksForUser = [];
+    return;
+  }
+  // ดึงงาน 10 รายการล่าสุดของคนนี้จาก Nhost
+  var QUERY = `
+    query GetRecentByReporter($reporter:String!) {
+      work_reports(
+        where:{reporter:{_eq:$reporter}},
+        order_by:{created_at:desc},
+        limit:10
+      ){
+        id result status created_at
+      }
+    }
+  `;
+  try{
+    var data = await gql(QUERY, { reporter: name });
+    _recentTasksForUser = (data && data.work_reports) ? data.work_reports : [];
+    if(_recentTasksForUser.length > 0){
+      if(btn){ btn.style.display = 'inline-flex'; }
+    } else {
+      if(btn){ btn.style.display = 'none'; }
+    }
+  }catch(e){
+    _recentTasksForUser = [];
+    if(btn) btn.style.display = 'none';
+  }
+}
+
+function toggleRecentTasksSection(){
+  var sec = document.getElementById('recentTasksSection');
+  var btn = document.getElementById('recentTasksToggleBtn');
+  var isOpen = sec.style.display !== 'none';
+  if(isOpen){
+    sec.style.display = 'none';
+    btn.textContent = '📋 ใส่จากงานเก่า';
+  } else {
+    sec.style.display = 'block';
+    btn.textContent = '✖ ปิด';
+    renderRecentTasksList();
+  }
+}
+
+function renderRecentTasksList(){
+  var container = document.getElementById('recentTasksList');
+  if(!_recentTasksForUser.length){
+    container.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:8px 0;text-align:center">ยังไม่มีข้อมูลงานเก่า</div>';
+    return;
+  }
+  container.innerHTML = _recentTasksForUser.map(function(r, i){
+    var stCls = r.status === 'สำเร็จ' ? 's1' : (r.status === 'รอดำเนินการ' ? 's2' : 's3');
+    var stIcon = r.status === 'สำเร็จ' ? '✅' : (r.status === 'รอดำเนินการ' ? '⏳' : '❌');
+    var dt = new Date(r.created_at);
+    var dateStr = dt.toLocaleDateString('th-TH',{month:'short',day:'2-digit'});
+    return '<div class="recent-task-label" onclick="toggleRecentTaskRow(this)">'
+      + '<input type="checkbox" data-idx="' + i + '" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--accent);pointer-events:none">'
+      + '<span style="flex:1;font-size:12.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(r.result||'—') + '</span>'
+      + '<span class="status-tag ' + stCls + '" style="font-size:10px;padding:2px 7px;flex-shrink:0">' + stIcon + ' ' + esc(r.status||'') + '</span>'
+      + '<span style="font-size:10px;color:var(--text3);font-family:var(--mono);flex-shrink:0">' + dateStr + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function toggleRecentTaskRow(el){
+  var cb = el.querySelector('input[type=checkbox]');
+  if(cb){
+    cb.checked = !cb.checked;
+    if(cb.checked){
+      el.classList.add('selected');
+    } else {
+      el.classList.remove('selected');
+    }
+  }
+}
+
+function addSelectedRecentTasks(){
+  var checkboxes = document.querySelectorAll('#recentTasksList input[type=checkbox]:checked');
+  if(!checkboxes.length){ showToast('กรุณาติ๊กเลือกอย่างน้อย 1 รายการ','error'); return; }
+  var currentStatus = getPickedStatus('statusPicker');
+  var added = 0;
+  checkboxes.forEach(function(cb){
+    var idx = parseInt(cb.getAttribute('data-idx'));
+    var r = _recentTasksForUser[idx];
+    if(r && r.result){
+      // ตรวจไม่ให้ซ้ำกับงานที่มีอยู่แล้ว
+      var dup = _topics.some(function(t){ return t.text === r.result; });
+      if(!dup){
+        _topics.push({ text: r.result, status: r.status || currentStatus });
+        added++;
+      }
+    }
+  });
+  if(added > 0){
+    renderTopicList();
+    saveDraftLocal();
+    showToast('✅ เพิ่ม ' + added + ' รายการแล้ว','success');
+    // ปิดส่วน recent tasks
+    var sec = document.getElementById('recentTasksSection');
+    if(sec) sec.style.display = 'none';
+    var btn = document.getElementById('recentTasksToggleBtn');
+    if(btn) btn.textContent = '📋 ใส่จากงานเก่า';
+  } else {
+    showToast('รายการที่เลือกมีอยู่แล้ว','error');
+  }
 }
 
 function addTopic(){
