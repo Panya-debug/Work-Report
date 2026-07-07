@@ -2225,6 +2225,7 @@ function applyFilter(){
   filter.dept=document.getElementById('filterDept').value;
   filter.date=document.getElementById('filterDate').value;
   filter.search=document.getElementById('filterSearch').value.toLowerCase();
+  filter.reporter=''; // ล้าง reporter filter เมื่อใช้ search box
   currentPage=1;
   renderTable(allReports);
 }
@@ -2232,6 +2233,9 @@ function getFiltered(reports){
   var now=new Date();
   return reports.filter(function(r){
     if(filter.dept&&r.dept!==filter.dept)return false;
+    // reporter filter: exact match (ใช้เมื่อคลิ๊กจากแถบชื่อ)
+    if(filter.reporter&&r.reporter!==filter.reporter)return false;
+    // search filter: ค้นหาใน reporter + result (ใช้เมื่อพิมพ์ค้นในช่องค้นหา)
     if(filter.search&&!(r.reporter+(r.result||'')).toLowerCase().includes(filter.search))return false;
     if(filter.date){
       var d=new Date(r.created_at);
@@ -2406,8 +2410,10 @@ function renderMemberList(){
   document.getElementById('totalMembers').textContent=Object.values(MEMBERS).reduce(function(s,a){return s+a.length;},0);
 }
 function filterByMember(name){
+  // ใช้ reporter exact match แทน text search เพื่อไม่จับรายการที่ชื่อคนอื่นอยู่ในผลงาน
   document.getElementById('filterSearch').value=name;
-  filter.search=name.toLowerCase();
+  filter.search='';
+  filter.reporter=name;
   currentPage=1;
   renderTable(allReports);
 }
