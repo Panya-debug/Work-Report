@@ -1565,7 +1565,8 @@ async function loadReports(){
       latestDate=new Date(allReports[0].created_at).toDateString();
     }
     renderTable(allReports,allReports.length>prev&&prev>0);
-    updateStats();
+    updateStats(); // today count จาก data ที่โหลด (เร็ว)
+    updateStatsFromDB(); // total/HR/other จาก aggregate query (แม่นยำ)
     renderMemberList();
     setStatus(true);
   }catch(e){
@@ -2326,12 +2327,53 @@ function goPage(p){
 // ════════════════════════════════════════════
 //  STATS
 // ════════════════════════════════════════════
+// อัปเดตเฉพาะ statToday จากข้อมูลที่โหลดมา (เร็ว)
 function updateStats(){
   var today=new Date().toDateString();
   document.getElementById('statToday').textContent=allReports.filter(function(r){return new Date(r.created_at).toDateString()===today;}).length;
+  // total/HR/other แสดงชั่วคราวจาก loaded data ก่อน — จะถูก overwrite โดย updateStatsFromDB()
   document.getElementById('statTotal').textContent=allReports.length;
   document.getElementById('statHR').textContent=allReports.filter(function(r){return r.dept==='HR';}).length;
   document.getElementById('statOther').textContent=allReports.filter(function(r){return r.dept!=='HR';}).length;
+}
+
+// อัปเดต total/HR/other จาก aggregate query — แม่นยำ 100% ไม่ติด limit:500
+async function updateStatsFromDB(){
+  // สร้าง today ISO string สำหรับ filter
+  var now = new Date();
+  var todayISO = now.getFullYear() + '-'
+    + String(now.getMonth()+1).padStart(2,'0') + '-'
+    + String(now.getDate()).padStart(2,'0');
+  var tomorrowDate = new Date(now);
+  tomorrowDate.setDate(tomorrowDate.getDate()+1);
+  var tomorrowISO = tomorrowDate.getFullYear() + '-'
+    + String(tomorrowDate.getMonth()+1).padStart(2,'0') + '-'
+    + String(tomorrowDate.getDate()).padStart(2,'0');
+
+  var QUERY = `
+    query GetStatCounts($today: timestamptz!, $tomorrow: timestamptz!) {
+      total: work_reports_aggregate { aggregate { count } }
+      hr: work_reports_aggregate(where:{dept:{_eq:"HR"}}) { aggregate { count } }
+      other: work_reports_aggregate(where:{dept:{_neq:"HR"}}) { aggregate { count } }
+      todayCount: work_reports_aggregate(
+        where:{created_at:{_gte:$today, _lt:$tomorrow}}
+      ) { aggregate { count } }
+    }
+  `;
+  try{
+    var data = await gql(QUERY, {
+      today: todayISO + 'T00:00:00+07:00',
+      tomorrow: tomorrowISO + 'T00:00:00+07:00'
+    });
+    if(!data) return;
+    if(data.total) document.getElementById('statTotal').textContent = data.total.aggregate.count;
+    if(data.hr) document.getElementById('statHR').textContent = data.hr.aggregate.count;
+    if(data.other) document.getElementById('statOther').textContent = data.other.aggregate.count;
+    if(data.todayCount) document.getElementById('statToday').textContent = data.todayCount.aggregate.count;
+  }catch(e){
+    // ถ้า aggregate query ล้มเหลว ให้คงค่าจาก updateStats() ไว้
+    console.warn('updateStatsFromDB failed:', e.message);
+  }
 }
 
 // ════════════════════════════════════════════
