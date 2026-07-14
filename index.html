@@ -1474,19 +1474,86 @@ function resetConfigToDefault(){
 //  ทุกเครื่องเห็นชื่อเหมือนกัน real-time
 // ════════════════════════════════════════════
 var _membersCache={HR:[],IT:[],IA:[]};
-var _deptsCache=['HR','IT','IA']; // เก็บรายชื่อแผนกที่มีอยู่ทั้งหมด
+var _deptsCache=['HR','IT','IA']; // เก็บรายชื่อแผนกที่มีอยู่ทั้งหมด (ลอด cache)
 
 function getMembers(){return _membersCache;}
 function getDepartments(){return _deptsCache;}
 
+// สร้างตาราง work_departments หากยังไม่มี และ seed ค่าเริ่มต้น HR/IT/IA
+var _deptTableReady = false;
+async function initDepartmentsTable(){
+  if(_deptTableReady) return;
+  try{
+    // สร้างตาราง (IF NOT EXISTS = ปลอดภัยถ้ามีอยู่แล้ว)
+    await runSql(
+      'CREATE TABLE IF NOT EXISTS work_departments (' +
+      '  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,' +
+      '  name text NOT NULL UNIQUE,' +
+      '  created_at timestamptz DEFAULT now() NOT NULL' +
+      ');'
+    );
+    // seed แผนกเริ่มต้น HR, IT, IA (ถ้ายังไม่มี)
+    await runSql(
+      "INSERT INTO work_departments (name) VALUES ('HR'),('IT'),('IA') ON CONFLICT (name) DO NOTHING;"
+    );
+    _deptTableReady = true;
+  }catch(e){
+    console.warn('initDepartmentsTable:', e.message);
+  }
+}
+
+// โหลดรายชื่อแผนกทั้งหมดจาก work_departments
+async function loadDepartmentsFromDB(){
+  try{
+    var result = await runSql('SELECT name FROM work_departments ORDER BY name;');
+    // result.result = [["name"],["AI"],["HR"],...]
+    if(result && result.result && result.result.length > 1){
+      _deptsCache = result.result.slice(1).map(function(row){ return row[0]; });
+    }
+  }catch(e){
+    console.warn('loadDepartmentsFromDB failed, using cache:', e.message);
+    // fallback: derive from members as before
+    var deptsSet = new Set(['HR','IT','IA']);
+    Object.keys(_membersCache).forEach(function(d){ deptsSet.add(d); });
+    _deptsCache = Array.from(deptsSet).sort();
+  }
+}
+
+// เพิ่มแผนกใหม่ลงตาราง work_departments
+async function insertDepartment(deptName){
+  try{
+    await runSql(
+      "INSERT INTO work_departments (name) VALUES ('" + deptName.replace(/'/g,"''") + "') ON CONFLICT (name) DO NOTHING;"
+    );
+    _deptTableReady = true;
+  }catch(e){
+    console.warn('insertDepartment:', e.message);
+  }
+}
+
+// ลบแผนกออกจาก work_departments
+async function removeDepartmentFromTable(deptName){
+  try{
+    await runSql(
+      "DELETE FROM work_departments WHERE name = '" + deptName.replace(/'/g,"''") + "';"
+    );
+  }catch(e){
+    console.warn('removeDepartmentFromTable:', e.message);
+  }
+}
+
 async function loadMembers(){
+  // สร้างตารางและ seed ครั้งแรก
+  await initDepartmentsTable();
+  // โหลดรายชื่อแผนกจริงจาก DB
+  await loadDepartmentsFromDB();
   var QUERY=`query GetMembers{work_members(order_by:{dept:asc,name:asc}){id dept name}}`;
   try{
     var data=await gql(QUERY);
     if(!data)return;
     
-    // ค้นหาและสร้างแผนกทั้งหมดอย่างไดนามิก
-    var deptsSet = new Set(['HR','IT','IA']);
+    // บูรณาการแผนกจาก work_members ด้วย (mergeกับที่โหลดมาจาก work_departments)
+    var deptsSet = new Set(_deptsCache);
     (data.work_members||[]).forEach(function(r){
       if(r.dept) deptsSet.add(r.dept.toUpperCase().trim());
     });
@@ -1607,6 +1674,32 @@ async function gql(query,variables){
   return json.data;
 }
 
+// เรียก Hasura /v2/query เพื่อรัน SQL ได้โดยตรง
+async function runSql(sql){
+  var c = getConfig();
+  if(!c.subdomain) return null;
+  var sqlUrl = 'https://' + c.subdomain + '.hasura.' + c.region + '.nhost.run/v2/query';
+  var headers = { 'Content-Type': 'application/json' };
+  if(c.secret) headers['x-hasura-admin-secret'] = c.secret;
+  var body = JSON.stringify({ type: 'run_sql', args: { sql: sql, cascade: false, read_only: false } });
+  var res = await fetch(sqlUrl, { method: 'POST', headers: headers, body: body });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+// ลบ constraint ที่จำกัด dept ใน work_reports อัตโนมัติ (เรียกครั้งเดียว)
+var _constraintDropped = false;
+async function dropDeptConstraint(){
+  if(_constraintDropped) return;
+  try{
+    await runSql('ALTER TABLE work_reports DROP CONSTRAINT IF EXISTS work_reports_dept_check;');
+    _constraintDropped = true;
+  }catch(e){
+    // ไม่เป็นไร ถ้าลบแล้วก็เพิกเฟย
+    console.warn('dropDeptConstraint:', e.message);
+  }
+}
+
 // ════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════
@@ -1621,6 +1714,8 @@ var latestDate=null; // วันที่ล่าสุดที่มีก�
 //  LOAD REPORTS
 // ════════════════════════════════════════════
 async function loadReports(){
+  // ลบ constraint อัตโนมัติ (safe — IF EXISTS ไม่ throw ถ้าลบแล้วเรียบร้อย)
+  dropDeptConstraint();
   var QUERY=`
     query GetReports {
       work_reports(order_by:{created_at:desc},limit:500){
@@ -2280,7 +2375,7 @@ function renderMemberEditList(){
 
       html+='<div class="member-edit-row" style="display:flex;gap:8px;align-items:center;margin-bottom:6px">'
         +'<input type="text" value="'+esc(name)+'" onchange="renameMember(\''+dept+'\',\''+id+'\',this.value)" style="margin:0;flex:1" />'
-        +'<select onchange="changeMemberDept(\''+id+'\',this.value)" style="margin:0;width:95px;font-size:13px;padding:8px 10px;height:38px;box-shadow:none">'
+        +'<select onchange="changeMemberDept(\''+id+'\',this.value,\''+esc(name)+'\',\''+dept+'\')" style="margin:0;width:95px;font-size:13px;padding:8px 10px;height:38px;box-shadow:none">'
         + deptOptions
         +'</select>'
         +'<button class="btn-icon" onclick="removeMember(\''+dept+'\',\''+id+'\')" style="padding:7px 10px;font-size:15px" title="ลบ">🗑</button>'
@@ -2291,14 +2386,32 @@ function renderMemberEditList(){
   document.getElementById('memberEditList').innerHTML=html;
 }
 
-async function changeMemberDept(memberId, newDept){
+async function changeMemberDept(memberId, newDept, memberName, oldDept){
   if(!newDept) return;
-  var MUTATION=`mutation ChangeMemberDept($id:uuid!,$dept:String!){update_work_members_by_pk(pk_columns:{id:$id},_set:{dept:$dept}){id dept}}`;
+  if(newDept === oldDept) return; // ไม่มีการเปลี่ยนแปลง
   try{
-    await gql(MUTATION,{id:memberId,dept:newDept});
-    await loadMembers();
-    renderMemberEditList();
-    showToast('✅ ย้ายแผนกสมาชิกสำเร็จ','success');
+    // 1. เปลี่ยนแผนกในตาราง work_members
+    var M1 = `mutation ChangeMemberDept($id:uuid!,$dept:String!){update_work_members_by_pk(pk_columns:{id:$id},_set:{dept:$dept}){id dept}}`;
+    await gql(M1, {id:memberId, dept:newDept});
+
+    // 2. อัปเดต work_reports ทั้งหมดของสมาชิกคนนี้ที่ยังใช้แผนกเดิม (oldDept)
+    if(memberName && oldDept){
+      var M2 = `mutation UpdateReportsDept($reporter:String!,$oldDept:String!,$newDept:String!){
+        update_work_reports(where:{reporter:{_eq:$reporter},dept:{_eq:$oldDept}},_set:{dept:$newDept}){
+          affected_rows
+        }
+      }`;
+      var res2 = await gql(M2, {reporter:memberName, oldDept:oldDept, newDept:newDept});
+      var updated = res2 && res2.update_work_reports ? res2.update_work_reports.affected_rows : 0;
+      await loadReports();
+      await loadMembers();
+      renderMemberEditList();
+      showToast('✅ ย้ายแผนก + อัปเดตรายงาน ' + updated + ' รายการแล้ว', 'success');
+    } else {
+      await loadMembers();
+      renderMemberEditList();
+      showToast('✅ ย้ายแผนกสมาชิกสำเร็จ','success');
+    }
   }catch(e){
     showToast('ย้ายแผนกไม่ได้: '+e.message,'error');
   }
@@ -2320,7 +2433,7 @@ async function deleteDepartment(dept, memberCount){
   }
   if(!confirm(msg)) return;
   
-  // mutation ในการลบสมาชิกทุกคนที่มีแผนกตรงกับ dept
+  // mutation ลบสมาชิกทุกคนในแผนก
   var MUTATION = `mutation DeleteDeptMembers($dept: String!) {
     delete_work_members(where: {dept: {_eq: $dept}}) {
       affected_rows
@@ -2329,7 +2442,8 @@ async function deleteDepartment(dept, memberCount){
   try{
     var res = await gql(MUTATION, { dept: dept });
     var deletedCount = res && res.delete_work_members ? res.delete_work_members.affected_rows : 0;
-    
+    // ลบแผนกออกจากตาราง work_departments ด้วย
+    await removeDepartmentFromTable(dept);
     await loadMembers();
     renderMemberEditList();
     showToast('🗑️ ลบแผนก ' + dept + ' สำเร็จ' + (deletedCount > 0 ? ' (ลบสมาชิก ' + deletedCount + ' คน)' : ''), 'success');
@@ -2348,6 +2462,8 @@ async function addMember(){
       return;
     }
     dept = customDept;
+    // บันทึกแผนกใหม่ลงตาราง work_departments ด้วย
+    await insertDepartment(dept);
   }
 
   if(!name){showToast('กรุณาใส่ชื่อ','error');return;}
