@@ -2551,6 +2551,9 @@ function getSorted(rows){
     return 0;
   });
 }
+function buildAiPrompt(){
+  return 'วิเคราะห์ข้อมูลสรุปการทำงานโดยแยกเป็นแผนกๆอย่างชัดเจนข้อมูลครบทุกคน และข้อมูลดิบ ไม่เกิน 5 หน้า อ่านง่าย สบายตา คนหยุดหรือลาใส่ไปด้วย ล่าสุดไม่ต้องใส่';
+}
 function sortBy(key){
   if(sortKey===key)sortDir*=-1;
   else{sortKey=key;sortDir=-1;}
@@ -2913,29 +2916,7 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay){
 // Enter key submit
 // topicInput Enter key handled inline via onkeydown
 
-// ════════════════════════════════════════════
-//  AI LINK  (with auto-prompt + clipboard)
-// ════════════════════════════════════════════
 var currentAiType = '';
-
-function buildAiPrompt(){
-  var data = getSorted(getFiltered(allReports));
-  if(!data.length) return 'ไม่มีข้อมูลรายงาน';
-  var lines = ['วิเคราะห์ผลการปฏิบัติงานของทีมจากข้อมูลด้านล่างนี้:\n'];
-  lines.push('จำนวนรายการทั้งหมด: ' + data.length + ' รายการ');
-  var byDept = {};
-  data.forEach(function(r){ byDept[r.dept] = (byDept[r.dept]||0)+1; });
-  Object.keys(byDept).forEach(function(d){ lines.push('- ฝ่าย ' + d + ': ' + byDept[d] + ' รายการ'); });
-  lines.push('\nรายละเอียดผลงาน:');
-  var shown = data.slice(0, 30);
-  shown.forEach(function(r, i){
-    var dt = new Date(r.created_at).toLocaleDateString('th-TH');
-    lines.push((i+1)+'. ['+r.dept+'] '+r.reporter+' ('+dt+'): '+(r.result||'-')+' — สถานะ: '+(r.status||'-'));
-  });
-  if(data.length > 30) lines.push('... และอีก ' + (data.length-30) + ' รายการ');
-  lines.push('\nกรุณาสรุปภาพรวม จุดเด่น จุดที่ควรปรับปรุง และข้อเสนอแนะ');
-  return lines.join('\n');
-}
 
 function getTodayReports(){
   var today = new Date().toLocaleDateString('th-TH',{year:'numeric',month:'2-digit',day:'2-digit'});
@@ -3016,7 +2997,7 @@ function setAiLink(url, type){
   document.getElementById('aiNotebookLMNote').style.display = (type==='notebooklm') ? 'block' : 'none';
   
   var previewArea = document.getElementById('aiPromptPreview');
-  previewArea.value = 'วิเคราะห์ข้อมูลสรุปการทำงานโดยแยกเป็นแผนกๆอย่างชัดเจนข้อมูลครบทุกคน และข้อมูลดิบ ไม่เกิน 5 หน้า อ่านง่าย สบายตา คนหยุดหรือสายใส่ไปด้วย';
+  previewArea.value = buildAiPrompt();
   updateAiBtn(url);
 }
 function onAiLinkInput(){
