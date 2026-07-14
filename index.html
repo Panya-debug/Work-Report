@@ -987,9 +987,6 @@ tr:hover td{background:var(--surface2)}
           <label>ฝ่าย</label>
           <select id="dept" onchange="onDeptChange()" style="margin-bottom:0">
             <option value="">— เลือกฝ่าย —</option>
-            <option value="HR">HR</option>
-            <option value="IT">IT</option>
-            <option value="IA">IA</option>
           </select>
         </div>
         <div>
@@ -1063,9 +1060,6 @@ tr:hover td{background:var(--surface2)}
     <input type="hidden" id="editId" />
     <label>ฝ่าย</label>
     <select id="editDept" onchange="updateEditNames()">
-      <option value="HR">HR</option>
-      <option value="IT">IT</option>
-      <option value="IA">IA</option>
     </select>
     <label>ชื่อ-นามสกุล</label>
     <select id="editName"></select>
@@ -1090,17 +1084,26 @@ tr:hover td{background:var(--surface2)}
     <h2>👥 จัดการสมาชิก</h2>
     <p>เพิ่ม / แก้ไข / ลบรายชื่อสมาชิกในแต่ละฝ่าย</p>
     <div class="section-title">เพิ่มสมาชิกใหม่</div>
-    <div class="member-edit-row">
-      <input type="text" id="newMemberName" placeholder="ชื่อ-นามสกุล" />
-      <select class="dept-sel" id="newMemberDept">
-        <option value="HR">HR</option>
-        <option value="IT">IT</option>
-        <option value="IA">IA</option>
+    <div class="member-edit-row" style="gap:8px;align-items:center;margin-bottom:12px">
+      <input type="text" id="newMemberName" placeholder="ชื่อ-นามสกุล" style="flex:1;margin:0" />
+      <select class="dept-sel" id="newMemberDept" onchange="onNewMemberDeptChange()" style="width:110px;margin:0">
       </select>
-      <button id="addMemberBtn" class="btn btn-success btn-sm" onclick="addMember()">➕ เพิ่ม</button>
+      <button id="addMemberBtn" class="btn btn-success btn-sm" onclick="addMember()" style="height:38px;padding:0 14px;white-space:nowrap">➕ เพิ่ม</button>
+    </div>
+    <!-- Input สำหรับระบุแผนกใหม่แบบกำหนดเอง -->
+    <div id="customDeptRow" style="display:none;margin-bottom:12px;background:var(--surface2);padding:10px;border-radius:var(--radius-xs);border:1px solid var(--border)">
+      <label for="customDeptName" style="font-size:11.5px;margin-bottom:4px;display:block">✨ ระบุชื่อแผนกใหม่:</label>
+      <input type="text" id="customDeptName" placeholder="เช่น QA, AC, MK..." style="margin:0;font-size:13px;text-transform:uppercase" />
+    </div>
+    <!-- ส่วนลบแผนก -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 12px;background:rgba(220,76,39,0.06);border:1px solid rgba(220,76,39,0.18);border-radius:var(--radius-xs)">
+      <span style="font-size:12px;font-weight:700;color:var(--accent3);white-space:nowrap">🗑 ลบแผนก:</span>
+      <select id="deleteDeptSel" style="margin:0;flex:1;font-size:13px;height:36px">
+      </select>
+      <button class="btn btn-danger btn-sm" onclick="deleteDeptFromDropdown()" style="height:36px;padding:0 12px;white-space:nowrap">🗑 ลบ</button>
     </div>
     <div class="section-title">รายชื่อปัจจุบัน</div>
-    <div id="memberEditList" style="max-height:320px;overflow-y:auto"></div>
+    <div id="memberEditList" style="max-height:280px;overflow-y:auto"></div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeMemberModal()">ปิด</button>
     </div>
@@ -1166,7 +1169,7 @@ tr:hover td{background:var(--surface2)}
 
   <div class="main">
     <!-- Stats -->
-    <div class="stats-row">
+    <div class="stats-row" id="statsRowContainer">
       <div class="stat-card"><div class="stat-label">รายงานวันนี้</div><div class="stat-value blue" id="statToday">0</div></div>
       <div class="stat-card"><div class="stat-label">รายงานทั้งหมด</div><div class="stat-value green" id="statTotal">0</div></div>
       <div class="stat-card"><div class="stat-label">ฝ่าย HR</div><div class="stat-value blue" id="statHR">0</div></div>
@@ -1177,9 +1180,6 @@ tr:hover td{background:var(--surface2)}
     <div class="toolbar">
       <select class="filter-select" id="filterDept" onchange="applyFilter()">
         <option value="">ทุกฝ่าย</option>
-        <option value="HR">HR</option>
-        <option value="IT">IT</option>
-        <option value="IA">IA</option>
       </select>
       <select class="filter-select" id="filterDate" onchange="applyFilter()">
         <option value="">ทุกวัน</option>
@@ -1242,9 +1242,6 @@ tr:hover td{background:var(--surface2)}
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
       <select class="filter-select" id="vaFilterDept" onchange="updateVaNames();renderViewAll()">
         <option value="">ทุกฝ่าย</option>
-        <option value="HR">HR</option>
-        <option value="IT">IT</option>
-        <option value="IA">IA</option>
       </select>
       <select class="filter-select" id="vaFilterName" onchange="renderViewAll()">
         <option value="">ทุกชื่อ</option>
@@ -1477,19 +1474,36 @@ function resetConfigToDefault(){
 //  ทุกเครื่องเห็นชื่อเหมือนกัน real-time
 // ════════════════════════════════════════════
 var _membersCache={HR:[],IT:[],IA:[]};
+var _deptsCache=['HR','IT','IA']; // เก็บรายชื่อแผนกที่มีอยู่ทั้งหมด
 
 function getMembers(){return _membersCache;}
+function getDepartments(){return _deptsCache;}
 
 async function loadMembers(){
   var QUERY=`query GetMembers{work_members(order_by:{dept:asc,name:asc}){id dept name}}`;
   try{
     var data=await gql(QUERY);
     if(!data)return;
-    var m={HR:[],IT:[],IA:[]};
+    
+    // ค้นหาและสร้างแผนกทั้งหมดอย่างไดนามิก
+    var deptsSet = new Set(['HR','IT','IA']);
     (data.work_members||[]).forEach(function(r){
-      if(m[r.dept])m[r.dept].push({id:r.id,name:r.name});
+      if(r.dept) deptsSet.add(r.dept.toUpperCase().trim());
+    });
+    _deptsCache = Array.from(deptsSet).sort();
+
+    var m={};
+    _deptsCache.forEach(function(d){ m[d] = []; });
+
+    (data.work_members||[]).forEach(function(r){
+      var d = r.dept.toUpperCase().trim();
+      if(m[d]) m[d].push({id:r.id,name:r.name});
     });
     _membersCache=m;
+    
+    // อัปเดต dropdown แผนกทั้งหมด
+    populateDeptDropdowns();
+
     if(document.getElementById('reportModal').classList.contains('hidden')){
       updateNames();
     } else {
@@ -1507,13 +1521,73 @@ async function loadMembers(){
   }
 }
 
+function populateDeptDropdowns(){
+  var depts = getDepartments();
+  
+  // 1. dropdown ในฟอร์มบันทึกหลัก
+  var deptSel = document.getElementById('dept');
+  var savedDept = deptSel.value;
+  deptSel.innerHTML = '<option value="">— เลือกฝ่าย —</option>' 
+    + depts.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('');
+  if(savedDept && depts.includes(savedDept)) deptSel.value = savedDept;
+
+  // 2. dropdown ในตัวแก้ไขรายการเดี่ยว (editModal)
+  var editDeptSel = document.getElementById('editDept');
+  if(editDeptSel){
+    var savedEditDept = editDeptSel.value;
+    editDeptSel.innerHTML = depts.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('');
+    if(savedEditDept && depts.includes(savedEditDept)) editDeptSel.value = savedEditDept;
+  }
+
+  // 3. dropdown กรองแถบ Toolbar หลัก
+  var filterDeptSel = document.getElementById('filterDept');
+  var savedFilterDept = filterDeptSel.value;
+  filterDeptSel.innerHTML = '<option value="">ทุกฝ่าย</option>' 
+    + depts.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('');
+  if(savedFilterDept && depts.includes(savedFilterDept)) filterDeptSel.value = savedFilterDept;
+
+  // 4. dropdown กรองใน modal ดูทั้งหมด (viewAllModal)
+  var vaFilterDeptSel = document.getElementById('vaFilterDept');
+  var savedVaFilterDept = vaFilterDeptSel.value;
+  vaFilterDeptSel.innerHTML = '<option value="">ทุกฝ่าย</option>' 
+    + depts.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('');
+  if(savedVaFilterDept && depts.includes(savedVaFilterDept)) vaFilterDeptSel.value = savedVaFilterDept;
+
+  // 5. dropdown ฝ่ายตอนเพิ่มสมาชิกใหม่ (memberModal)
+  var newMemberDeptSel = document.getElementById('newMemberDept');
+  var savedNewMemberDept = newMemberDeptSel ? newMemberDeptSel.value : '';
+  if(newMemberDeptSel){
+    newMemberDeptSel.innerHTML = depts.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('')
+      + '<option value="__custom__">✨ เพิ่มแผนกใหม่...</option>';
+    if(savedNewMemberDept) newMemberDeptSel.value = savedNewMemberDept;
+  }
+
+  // 6. dropdown ลบแผนก (memberModal)
+  var deleteDeptSel = document.getElementById('deleteDeptSel');
+  if(deleteDeptSel){
+    deleteDeptSel.innerHTML = '<option value="">— เลือกแผนกที่ต้องการลบ —</option>'
+      + depts.map(function(d){ return '<option value="'+d+'">'+d+'</option>'; }).join('');
+  }
+}
+
+function onNewMemberDeptChange(){
+  var val = document.getElementById('newMemberDept').value;
+  var customRow = document.getElementById('customDeptRow');
+  if(val === '__custom__'){
+    customRow.style.display = 'block';
+    document.getElementById('customDeptName').focus();
+  } else {
+    customRow.style.display = 'none';
+  }
+}
+
 function showMembersTableHint(){
   var el=document.getElementById('memberList');
   if(el)el.innerHTML='<div style="color:var(--accent3);font-size:12px;padding:8px 0;line-height:1.6">⚠️ ยังไม่มีตาราง <code>work_members</code><br>กรุณาสร้างใน Hasura ก่อน<br><a href="#" onclick="showCreateTableSQL()" style="color:var(--accent)">ดู SQL คำสั่ง ›</a></div>';
 }
 
 function showCreateTableSQL(){
-  var sql='CREATE TABLE work_members (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  dept text NOT NULL,\n  name text NOT NULL,\n  created_at timestamptz DEFAULT now()\n);\n\n-- Track ใน Hasura แล้ว grant SELECT,INSERT,DELETE';
+  var sql='CREATE TABLE work_members (\n  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,\n  dept text NOT NULL,\n  name text NOT NULL,\n  created_at timestamptz DEFAULT now() NOT NULL\n);\n\n-- Track ใน Hasura แล้ว grant SELECT,INSERT,DELETE';
   alert('สร้างตาราง work_members ใน Hasura:\n\n'+sql);
 }
 
@@ -2154,25 +2228,128 @@ async function closeMemberModal(){
 }
 function renderMemberEditList(){
   var MEMBERS=getMembers();
+  var depts=getDepartments();
   var html='';
-  ['HR','IT','IA'].forEach(function(dept){
-    var cls=dept.toLowerCase();
-    html+='<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;padding-top:8px;border-top:1px solid var(--border)"><span class="dept-tag '+cls+'">'+dept+'</span></div>';
+  
+  var dynamicColors = {
+    hr: { bg: 'rgba(37,99,235,0.1)', fg: 'var(--accent)', border: 'rgba(37,99,235,0.22)' },
+    it: { bg: 'rgba(5,150,105,0.1)', fg: 'var(--accent2)', border: 'rgba(5,150,105,0.22)' },
+    ia: { bg: 'rgba(124,58,237,0.1)', fg: 'var(--accent4)', border: 'rgba(124,58,237,0.22)' },
+    qa: { bg: 'rgba(219,39,119,0.1)', fg: '#db2777', border: 'rgba(219,39,119,0.22)' },
+    ac: { bg: 'rgba(217,119,6,0.1)', fg: '#d97706', border: 'rgba(217,119,6,0.22)' },
+    mk: { bg: 'rgba(13,148,136,0.1)', fg: '#0d9488', border: 'rgba(13,148,136,0.22)' }
+  };
+
+  depts.forEach(function(dept, deptIdx){
+    var cleanDept = dept.toLowerCase();
+    var colorTheme = dynamicColors[cleanDept];
+    if(!colorTheme){
+      var hue = (deptIdx * 137) % 360;
+      colorTheme = {
+        bg: 'hsla(' + hue + ', 70%, 50%, 0.1)',
+        fg: 'hsl(' + hue + ', 70%, 45%)',
+        border: 'hsla(' + hue + ', 70%, 50%, 0.25)'
+      };
+    }
+    var tagStyle = 'background:' + colorTheme.bg + ';color:' + colorTheme.fg + ';border:1px solid ' + colorTheme.border + ';margin-bottom:6px;display:inline-block;';
+
+    var memberCount = (MEMBERS[dept]||[]).length;
+    var deleteDeptBtn = '';
+    
+    // ปุ่มลบแผนก: ถ้าแผนกไม่มีคน จะลบได้ง่าย ถ้ามีคนจะแจ้งเตือนยืนยันลบพนักงานทั้งหมดในแผนก
+    if(memberCount === 0) {
+      deleteDeptBtn = '<button class="btn-icon" onclick="deleteDepartment(\''+dept+'\', 0)" style="padding:2px 6px;margin-left:8px;font-size:12px;color:var(--accent3)" title="ลบแผนกว่างนี้">🗑 ลบแผนก</button>';
+    } else {
+      deleteDeptBtn = '<button class="btn-icon" onclick="deleteDepartment(\''+dept+'\','+memberCount+')" style="padding:2px 6px;margin-left:8px;font-size:11px;color:var(--text3);opacity:0.6" title="ลบแผนกพร้อมสมาชิกทั้งหมด">🗑 ลบแผนก ('+memberCount+' คน)</button>';
+    }
+
+    html+='<div style="margin:12px 0 6px;padding-top:8px;border-top:1px solid var(--border);display:flex;align-items:center">'
+      +'<span class="dept-tag" style="' + tagStyle + '">'+dept+'</span>'
+      + deleteDeptBtn
+      +'</div>';
+
     (MEMBERS[dept]||[]).forEach(function(member){
       var id=member.id||'';
       var name=member.name||member;
-      html+='<div class="member-edit-row">'
+      
+      // สร้าง options ของ dropdown แผนกทั้งหมดสำหรับแก้ไขย้ายแผนกแบบ inline
+      var deptOptions = depts.map(function(d){
+        var selected = (d === dept) ? 'selected' : '';
+        return '<option value="' + d + '" ' + selected + '>' + d + '</option>';
+      }).join('');
+
+      html+='<div class="member-edit-row" style="display:flex;gap:8px;align-items:center;margin-bottom:6px">'
         +'<input type="text" value="'+esc(name)+'" onchange="renameMember(\''+dept+'\',\''+id+'\',this.value)" style="margin:0;flex:1" />'
-        +'<button class="btn-icon" onclick="removeMember(\''+dept+'\',\''+id+'\')" title="ลบ">🗑</button>'
+        +'<select onchange="changeMemberDept(\''+id+'\',this.value)" style="margin:0;width:95px;font-size:13px;padding:8px 10px;height:38px;box-shadow:none">'
+        + deptOptions
+        +'</select>'
+        +'<button class="btn-icon" onclick="removeMember(\''+dept+'\',\''+id+'\')" style="padding:7px 10px;font-size:15px" title="ลบ">🗑</button>'
         +'</div>';
     });
   });
   if(!html)html='<div style="color:var(--text3);font-size:13px;padding:8px 0">ยังไม่มีสมาชิก — เพิ่มด้านบนได้เลย</div>';
   document.getElementById('memberEditList').innerHTML=html;
 }
+
+async function changeMemberDept(memberId, newDept){
+  if(!newDept) return;
+  var MUTATION=`mutation ChangeMemberDept($id:uuid!,$dept:String!){update_work_members_by_pk(pk_columns:{id:$id},_set:{dept:$dept}){id dept}}`;
+  try{
+    await gql(MUTATION,{id:memberId,dept:newDept});
+    await loadMembers();
+    renderMemberEditList();
+    showToast('✅ ย้ายแผนกสมาชิกสำเร็จ','success');
+  }catch(e){
+    showToast('ย้ายแผนกไม่ได้: '+e.message,'error');
+  }
+}
+
+async function deleteDeptFromDropdown(){
+  var sel = document.getElementById('deleteDeptSel');
+  var dept = sel ? sel.value : '';
+  if(!dept){ showToast('กรุณาเลือกแผนกที่ต้องการลบก่อน','error'); return; }
+  var MEMBERS = getMembers();
+  var memberCount = (MEMBERS[dept] || []).length;
+  await deleteDepartment(dept, memberCount);
+}
+
+async function deleteDepartment(dept, memberCount){
+  var msg = 'ต้องการลบแผนก "' + dept + '" ใช่หรือไม่?';
+  if(memberCount > 0){
+    msg = '⚠️ คำเตือน: แผนก "' + dept + '" มีสมาชิกอยู่ ' + memberCount + ' คน\nการลบแผนกนี้จะทำการลบสมาชิกทุกคนในแผนกออกทั้งหมด!\n\nยืนยันที่จะลบใช่หรือไม่?';
+  }
+  if(!confirm(msg)) return;
+  
+  // mutation ในการลบสมาชิกทุกคนที่มีแผนกตรงกับ dept
+  var MUTATION = `mutation DeleteDeptMembers($dept: String!) {
+    delete_work_members(where: {dept: {_eq: $dept}}) {
+      affected_rows
+    }
+  }`;
+  try{
+    var res = await gql(MUTATION, { dept: dept });
+    var deletedCount = res && res.delete_work_members ? res.delete_work_members.affected_rows : 0;
+    
+    await loadMembers();
+    renderMemberEditList();
+    showToast('🗑️ ลบแผนก ' + dept + ' สำเร็จ' + (deletedCount > 0 ? ' (ลบสมาชิก ' + deletedCount + ' คน)' : ''), 'success');
+  } catch(e){
+    showToast('ลบแผนกไม่ได้: ' + e.message, 'error');
+  }
+}
 async function addMember(){
   var name=document.getElementById('newMemberName').value.trim();
   var dept=document.getElementById('newMemberDept').value;
+  
+  if(dept === '__custom__'){
+    var customDept = document.getElementById('customDeptName').value.trim().toUpperCase();
+    if(!customDept){
+      showToast('กรุณาระบุชื่อแผนกใหม่','error');
+      return;
+    }
+    dept = customDept;
+  }
+
   if(!name){showToast('กรุณาใส่ชื่อ','error');return;}
   var MEMBERS=getMembers();
   var exists=(MEMBERS[dept]||[]).find(function(m){return m.name===name;});
@@ -2183,9 +2360,11 @@ async function addMember(){
     if(btn){btn.disabled=true;}
     var data=await gql(MUTATION,{dept:dept,name:name});
     document.getElementById('newMemberName').value='';
+    document.getElementById('customDeptName').value='';
+    document.getElementById('customDeptRow').style.display='none';
     await loadMembers();
     renderMemberEditList();
-    showToast('✅ เพิ่ม '+name+' แล้ว (ทุกเครื่องเห็น)','success');
+    showToast('✅ เพิ่ม '+name+' ฝ่าย '+dept+' แล้ว','success');
   }catch(e){
     showToast('เพิ่มไม่ได้: '+e.message,'error');
   }finally{
@@ -2293,8 +2472,19 @@ function renderTable(reports,flashFirst){
     var t=dt.toLocaleString('th-TH',{month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'});
     var isLatest=latestDate&&dt.toDateString()===latestDate;
     var flash=(flashFirst&&i===0)?' class="new-row"':'';
+    
+    // ตั้งค่าสี tag แผนกแบบไดนามิก หากไม่ใช่ HR, IT, IA
+    var tagStyle = '';
+    var depts = getDepartments();
+    var deptIdx = depts.indexOf(r.dept.toUpperCase().trim());
+    if (cls !== 'hr' && cls !== 'it' && cls !== 'ia') {
+      var hue = (deptIdx !== -1 ? deptIdx : 3) * 137 % 360;
+      tagStyle = 'style="background:hsla(' + hue + ',70%,50%,0.1);color:hsl(' + hue + ',70%,45%);border:1px solid hsla(' + hue + ',70%,50%,0.22)"';
+    }
+    var tagClass = (cls === 'hr' || cls === 'it' || cls === 'ia') ? 'dept-tag ' + cls : 'dept-tag';
+
     return'<tr'+flash+'>'
-      +'<td><span class="dept-tag '+cls+'">'+r.dept+'</span></td>'
+      +'<td><span class="' + tagClass + '" ' + tagStyle + '>'+r.dept+'</span></td>'
       +'<td style="font-size:13.5px;font-weight:600;color:var(--text)">'+esc(r.reporter)+'</td>'
       +'<td>'
       +'<div class="topic-text">'+esc(r.result||'')+(isLatest?' <span class="latest-badge">ล่าสุด</span>':'')+'</div>'
@@ -2335,15 +2525,40 @@ function goPage(p){
 function updateStats(){
   var today=new Date().toDateString();
   document.getElementById('statToday').textContent=allReports.filter(function(r){return new Date(r.created_at).toDateString()===today;}).length;
-  // total/HR/other แสดงชั่วคราวจาก loaded data ก่อน — จะถูก overwrite โดย updateStatsFromDB()
   document.getElementById('statTotal').textContent=allReports.length;
-  document.getElementById('statHR').textContent=allReports.filter(function(r){return r.dept==='HR';}).length;
-  document.getElementById('statOther').textContent=allReports.filter(function(r){return r.dept!=='HR';}).length;
+  renderDynamicStatsHtml(null); // แสดงสถานะชั่วคราว
 }
 
-// อัปเดต total/HR/other จาก aggregate query — แม่นยำ 100% ไม่ติด limit:500
+// โครงสร้างการแสดงการ์ดสถิติแบบไดนามิกตามแผนกที่มีในระบบ
+function renderDynamicStatsHtml(aggData){
+  var depts = getDepartments();
+  var html = '';
+  // 1. วันนี้
+  var todayVal = aggData ? aggData.todayVal : allReports.filter(function(r){return new Date(r.created_at).toDateString()===new Date().toDateString();}).length;
+  html += '<div class="stat-card"><div class="stat-label">รายงานวันนี้</div><div class="stat-value blue" id="statToday">' + todayVal + '</div></div>';
+  
+  // 2. ทั้งหมด
+  var totalVal = aggData ? aggData.totalVal : allReports.length;
+  html += '<div class="stat-card"><div class="stat-label">รายงานทั้งหมด</div><div class="stat-value green" id="statTotal">' + totalVal + '</div></div>';
+  
+  // 3. การ์ดสำหรับฝ่ายแต่ละฝ่าย
+  depts.forEach(function(dept, i){
+    var count = 0;
+    if(aggData && aggData.depts[dept] !== undefined){
+      count = aggData.depts[dept];
+    } else {
+      count = allReports.filter(function(r){return r.dept===dept;}).length;
+    }
+    // สลับสีของการ์ดแผนก
+    var colorCls = (i % 3 === 0) ? 'blue' : ((i % 3 === 1) ? 'purple' : 'green');
+    html += '<div class="stat-card"><div class="stat-label">ฝ่าย ' + dept + '</div><div class="stat-value ' + colorCls + '">' + count + '</div></div>';
+  });
+
+  document.getElementById('statsRowContainer').innerHTML = html;
+}
+
+// อัปเดต total/แผนกต่างๆ จาก aggregate query — แม่นยำ 100% ไม่ติด limit:500
 async function updateStatsFromDB(){
-  // สร้าง today ISO string สำหรับ filter
   var now = new Date();
   var todayISO = now.getFullYear() + '-'
     + String(now.getMonth()+1).padStart(2,'0') + '-'
@@ -2354,14 +2569,20 @@ async function updateStatsFromDB(){
     + String(tomorrowDate.getMonth()+1).padStart(2,'0') + '-'
     + String(tomorrowDate.getDate()).padStart(2,'0');
 
+  // สร้าง Dynamic GQL query นับแยกตามแต่ละฝ่ายที่มีอยู่จริงใน caching
+  var depts = getDepartments();
+  var dynamicFields = depts.map(function(dept){
+    var cleanKey = dept.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    return cleanKey + ': work_reports_aggregate(where:{dept:{_eq:"' + dept + '"}}) { aggregate { count } }';
+  }).join('\n');
+
   var QUERY = `
     query GetStatCounts($today: timestamptz!, $tomorrow: timestamptz!) {
       total: work_reports_aggregate { aggregate { count } }
-      hr: work_reports_aggregate(where:{dept:{_eq:"HR"}}) { aggregate { count } }
-      other: work_reports_aggregate(where:{dept:{_neq:"HR"}}) { aggregate { count } }
       todayCount: work_reports_aggregate(
         where:{created_at:{_gte:$today, _lt:$tomorrow}}
       ) { aggregate { count } }
+      ${dynamicFields}
     }
   `;
   try{
@@ -2370,12 +2591,24 @@ async function updateStatsFromDB(){
       tomorrow: tomorrowISO + 'T00:00:00+07:00'
     });
     if(!data) return;
-    if(data.total) document.getElementById('statTotal').textContent = data.total.aggregate.count;
-    if(data.hr) document.getElementById('statHR').textContent = data.hr.aggregate.count;
-    if(data.other) document.getElementById('statOther').textContent = data.other.aggregate.count;
-    if(data.todayCount) document.getElementById('statToday').textContent = data.todayCount.aggregate.count;
+    
+    var aggData = {
+      totalVal: data.total ? data.total.aggregate.count : 0,
+      todayVal: data.todayCount ? data.todayCount.aggregate.count : 0,
+      depts: {}
+    };
+
+    depts.forEach(function(dept){
+      var cleanKey = dept.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      if(data[cleanKey]){
+        aggData.depts[dept] = data[cleanKey].aggregate.count;
+      } else {
+        aggData.depts[dept] = 0;
+      }
+    });
+
+    renderDynamicStatsHtml(aggData);
   }catch(e){
-    // ถ้า aggregate query ล้มเหลว ให้คงค่าจาก updateStats() ไว้
     console.warn('updateStatsFromDB failed:', e.message);
   }
 }
@@ -2391,17 +2624,45 @@ function renderMemberList(){
     if(new Date(r.created_at).toDateString()===today)
       counts[r.reporter]=(counts[r.reporter]||0)+1;
   });
+  
+  // สีกึ่งสุ่มสำหรับฝ่ายที่เพิ่มใหม่แบบ dynamic
+  var dynamicColors = {
+    hr: { bg: 'rgba(37,99,235,0.1)', fg: 'var(--accent)', border: 'rgba(37,99,235,0.22)', avatarBg: 'rgba(37,99,235,0.14)' },
+    it: { bg: 'rgba(5,150,105,0.1)', fg: 'var(--accent2)', border: 'rgba(5,150,105,0.22)', avatarBg: 'rgba(5,150,105,0.14)' },
+    ia: { bg: 'rgba(124,58,237,0.1)', fg: 'var(--accent4)', border: 'rgba(124,58,237,0.22)', avatarBg: 'rgba(124,58,237,0.14)' },
+    qa: { bg: 'rgba(219,39,119,0.1)', fg: '#db2777', border: 'rgba(219,39,119,0.22)', avatarBg: 'rgba(219,39,119,0.14)' },
+    ac: { bg: 'rgba(217,119,6,0.1)', fg: '#d97706', border: 'rgba(217,119,6,0.22)', avatarBg: 'rgba(217,119,6,0.14)' },
+    mk: { bg: 'rgba(13,148,136,0.1)', fg: '#0d9488', border: 'rgba(13,148,136,0.22)', avatarBg: 'rgba(13,148,136,0.14)' }
+  };
+  
   var html='';
-  Object.keys(MEMBERS).forEach(function(dept){
+  Object.keys(MEMBERS).forEach(function(dept, deptIdx){
+    var cleanDept = dept.toLowerCase();
+    
+    // ตั้งค่าสีกรณีเป็นแผนกใหม่ที่ไม่มีในตัวแปรสีตั้งต้น
+    var colorTheme = dynamicColors[cleanDept];
+    if(!colorTheme){
+      var hue = (deptIdx * 137) % 360; // สร้างสีไม่ซ้ำกัน
+      colorTheme = {
+        bg: 'hsla(' + hue + ', 70%, 50%, 0.1)',
+        fg: 'hsl(' + hue + ', 70%, 45%)',
+        border: 'hsla(' + hue + ', 70%, 50%, 0.25)',
+        avatarBg: 'hsla(' + hue + ', 70%, 50%, 0.15)'
+      };
+    }
+
     MEMBERS[dept].forEach(function(member){
       var name=member.name||member;
-      var cls=dept.toLowerCase();
       var init=name.split(' ').map(function(w){return w[0];}).join('').slice(0,2);
+      
+      var avatarStyle = 'background:' + colorTheme.avatarBg + ';color:' + colorTheme.fg + ';';
+      var tagStyle = 'background:' + colorTheme.bg + ';color:' + colorTheme.fg + ';border:1px solid ' + colorTheme.border + ';';
+
       html+='<div class="member-item">'
-        +'<div class="avatar '+cls+'">'+init+'</div>'
+        +'<div class="avatar" style="' + avatarStyle + '">'+init+'</div>'
         +'<div style="flex:1;cursor:pointer" onclick="filterByMember(\''+esc(name)+'\')">'
         +'<div class="member-name">'+esc(name)+'</div>'
-        +'<span class="dept-tag '+cls+'">'+dept+'</span></div>'
+        +'<span class="dept-tag" style="' + tagStyle + '">'+dept+'</span></div>'
         +'<div class="member-count">'+(counts[name]||0)+'</div>'
         +'</div>';
     });
@@ -2715,11 +2976,12 @@ function updateVaNames(){
   var dept = document.getElementById('vaFilterDept').value;
   var sel  = document.getElementById('vaFilterName');
   var MEMBERS = getMembers();
+  var depts = getDepartments();
   var prev = sel.value;
   if(!dept){
     // รวมทุกฝ่าย
     var allNames = [];
-    ['HR','IT','IA'].forEach(function(d){
+    depts.forEach(function(d){
       (MEMBERS[d]||[]).forEach(function(m){ allNames.push({name:m.name||m, dept:d}); });
     });
     sel.innerHTML = '<option value="">ทุกชื่อ</option>'
@@ -2789,8 +3051,19 @@ function renderViewAll(){
     var dt = new Date(r.created_at);
     var t = dt.toLocaleString('th-TH',{month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'});
     var rowBg = i % 2 === 1 ? 'background:var(--surface2)' : '';
+    
+    // ตั้งค่าสี tag แผนกแบบไดนามิก หากไม่ใช่ HR, IT, IA
+    var tagStyle = '';
+    var depts = getDepartments();
+    var deptIdx = depts.indexOf(r.dept.toUpperCase().trim());
+    if (cls !== 'hr' && cls !== 'it' && cls !== 'ia') {
+      var hue = (deptIdx !== -1 ? deptIdx : 3) * 137 % 360;
+      tagStyle = 'style="background:hsla(' + hue + ',70%,50%,0.1);color:hsl(' + hue + ',70%,45%);border:1px solid hsla(' + hue + ',70%,50%,0.22)"';
+    }
+    var tagClass = (cls === 'hr' || cls === 'it' || cls === 'ia') ? 'dept-tag ' + cls : 'dept-tag';
+
     return '<tr style="' + rowBg + '">'
-      + '<td style="padding:10px 12px;border-bottom:1px solid var(--border)"><span class="dept-tag ' + cls + '">' + r.dept + '</span></td>'
+      + '<td style="padding:10px 12px;border-bottom:1px solid var(--border)"><span class="' + tagClass + '" ' + tagStyle + '">' + r.dept + '</span></td>'
       + '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text)">' + esc(r.reporter) + '</td>'
       + '<td style="padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)">' + esc(r.result||'') + '</td>'
       + '<td style="padding:10px 12px;border-bottom:1px solid var(--border)">' + (r.status ? statusTagHtml(r.status) : '<span style="color:var(--text3)">—</span>') + '</td>'
